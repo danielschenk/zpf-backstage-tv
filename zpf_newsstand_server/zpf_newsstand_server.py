@@ -39,7 +39,7 @@ def cache_zpf_resource(path, contents):
     if not os.path.exists(dirname):
         os.makedirs(dirname)
     with open(fs_path, 'wb') as f:
-        f.write(contents.encode('utf-8'))
+        f.write(contents)
 
 
 def get_zpf_resource(path):
@@ -49,24 +49,27 @@ def get_zpf_resource(path):
         cache_path = zpf_to_fs_path(path)
         if time.time() - os.path.getmtime(cache_path) < 3600:
             with open(cache_path, 'rb') as f:
-                print 'serving {0} from cache'.format(path)
-                contents = f.read().decode('utf-8')
+                print 'using ZPF resource {0} from cache'.format(path)
+                contents = f.read()
         else:
             need_update = True
     except (OSError, IOError):
         need_update = True
 
     if need_update:
-        contents = requests.get(ZPF_URL + path).text
+        print 'fetching ZPF resource {0}...'.format(path)
+        contents = requests.get(ZPF_URL + path).content
         cache_zpf_resource(path, contents)
 
     return contents
 
 
 def parse_program_az(az_html):
-    root = ET.fromstring(az_html)
+    parser = ET.XMLParser(html=True)
+    root = ET.ElementTree()
+    root.parse(az_html, parser=parser)
     acts = root.findall("//div[contains(concat(' ', @class, ' '), ' act ')]")
-    return acts
+    print acts
 
 
 @app.route("/")
