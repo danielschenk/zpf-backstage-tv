@@ -10,7 +10,8 @@ import socket
 import requests
 import os
 import time
-import xml.etree.ElementTree as ET
+from lxml import html
+import urlparse
 
 from flask import Flask, render_template, jsonify, g, make_response
 
@@ -19,22 +20,22 @@ ZPF_URL = 'http://www.zomerparkfeest.nl'
 app = Flask(__name__)
 
 
-def zpf_to_fs_path(path):
-    if path.startswith('/'):
-        path = path[1:]
+def url_to_fs_path(url):
+    scheme, netloc, path, parameters, query, fragment = urlparse.urlparse(url)
+
     components = path.split('/')
+    if components[0] == '':
+        components = components[1:]
     dirpath = ''
     for component in components[:-1]:
         dirpath += 'dir_' + component + '/'
 
-    return os.path.join(app.instance_path, 'zpf_cache', dirpath,
-                        components[-1])
+    return os.path.join(app.instance_path, 'web_cache', scheme, netloc,
+                        dirpath, components[-1])
 
 
-def cache_zpf_resource(path, contents):
-    if path.startswith('/'):
-        path = path[1:]
-    fs_path = zpf_to_fs_path(path)
+def cache_resource(url, contents):
+    fs_path = url_to_fs_path(url)
     dirname = os.path.dirname(fs_path)
     if not os.path.exists(dirname):
         os.makedirs(dirname)
@@ -42,14 +43,14 @@ def cache_zpf_resource(path, contents):
         f.write(contents)
 
 
-def get_zpf_resource(path):
+def get_resource(url):
     need_update = False
 
     try:
-        cache_path = zpf_to_fs_path(path)
+        cache_path = url_to_fs_path(url)
         if time.time() - os.path.getmtime(cache_path) < 3600:
             with open(cache_path, 'rb') as f:
-                print 'using ZPF resource {0} from cache'.format(path)
+                print 'using resource {0} from cache'.format(url)
                 contents = f.read()
         else:
             need_update = True
@@ -57,19 +58,26 @@ def get_zpf_resource(path):
         need_update = True
 
     if need_update:
-        print 'fetching ZPF resource {0}...'.format(path)
-        contents = requests.get(ZPF_URL + path).content
-        cache_zpf_resource(path, contents)
+        print 'fetching resource {0}...'.format(url)
+        contents = requests.get(url).content
+        cache_resource(url, contents)
 
     return contents
 
 
 def parse_program_az(az_html):
-    parser = ET.XMLParser(html=True)
-    root = ET.ElementTree()
-    root.parse(az_html, parser=parser)
-    acts = root.findall("//div[contains(concat(' ', @class, ' '), ' act ')]")
-    print acts
+    tree = html.fromstring(az_html)
+    acts = tree.xpath("//div[contains(concat(' ', @class, ' '), ' act ')]")
+    programme = []
+    for act in acts:
+        img = act.find("figure/picture//img")
+        a = act.find("figure/figcaption/a")
+        actinfo = {}
+        actinfo['name'] = a.text
+        actinfo['url'] = a.get('href')
+        actinfo['img_src'] = img.get('data-src')
+        programme.append(actinfo)
+    return programme
 
 
 @app.route("/")
@@ -82,6 +90,6 @@ def serve_index():
 
 @app.route("/program")
 def serve_program():
-    response = parse_program_az(get_zpf_resource('/programma/a-z'))
+    response = make_response(jsonify(parse_program_az(get_resource(ZPF_URL + '/programma/a-z'))))
     return response
 
