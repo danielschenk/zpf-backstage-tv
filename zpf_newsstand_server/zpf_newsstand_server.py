@@ -50,7 +50,7 @@ def get_resource(url):
         cache_path = url_to_fs_path(url)
         if time.time() - os.path.getmtime(cache_path) < 3600:
             with open(cache_path, 'rb') as f:
-                print 'using resource {0} from cache'.format(url)
+                print 'using resource {0} from cache'.format(url.encode('ascii', 'replace'))
                 contents = f.read()
         else:
             need_update = True
@@ -58,7 +58,7 @@ def get_resource(url):
         need_update = True
 
     if need_update:
-        print 'fetching resource {0}...'.format(url)
+        print 'fetching resource {0}...'.format(url.encode('ascii', 'replace'))
         contents = requests.get(url).content
         cache_resource(url, contents)
 
@@ -76,6 +76,19 @@ def parse_program_az(az_html):
         actinfo['name'] = a.text
         actinfo['url'] = a.get('href')
         actinfo['img_src'] = img.get('data-src')
+
+        act_html = get_resource(actinfo['url'])
+        tree_act = html.fromstring(act_html)
+        div_playdate = tree_act.xpath(
+            "//div[@class='playDate']")
+        div_desc = tree_act.xpath(
+            "//div[contains(concat(' ', @class, ' '), ' content ')]")
+
+        actinfo['description'] = div_desc[0].find("p").text
+
+        print div_playdate[0].findall("span")
+        actinfo['stage'] = div_playdate[0].findall("span")[1].text
+
         programme.append(actinfo)
     return programme
 
@@ -88,7 +101,7 @@ def serve_index():
     return render_template('index.html', **locals())
 
 
-@app.route("/program")
+@app.route("/programme")
 def serve_program():
     response = make_response(jsonify(parse_program_az(get_resource(ZPF_URL + '/programma/a-z'))))
     return response
