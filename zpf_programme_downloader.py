@@ -143,7 +143,7 @@ def main(argv):
         json.dump(filtered_programme, f, indent=4, separators=(',', ': '))
 
     with open(os.path.join(args.output_dir, args.output_name + '.csv'), 'w') as f:
-        writer = csv.DictWriter(f, ['dag','name','genre','getin','dressingroom','soundcheck','linecheck','showtime','end','country','image','description'],
+        writer = csv.DictWriter(f, ['dag','name','genre','getin','dressingroom','soundcheck','linecheck','showtime','end','country','image','description','local'],
                                 extrasaction='ignore')
         writer.writeheader()
         for k, v in filtered_programme.iteritems():
