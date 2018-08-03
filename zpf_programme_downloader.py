@@ -4,6 +4,7 @@
 """
 
 import os
+import shutil
 import sys
 import argparse
 import requests
@@ -13,26 +14,49 @@ import hashlib
 from cachecontrol import CacheControl
 from cachecontrol.caches.file_cache import FileCache
 
+import calendar
+from cachecontrol.heuristics import BaseHeuristic
+from datetime import datetime, timedelta
+from email.utils import parsedate, formatdate
+
 import zpfwebsite.parser
 
 ZPF_URL = 'http://www.zomerparkfeest.nl'
 PROGRAMME_AZ_URL = ZPF_URL + '/programme/a-z'
 
-CACHE_DIR = '/tmp/zpf_newsstand/requests_cache'
+TMP_DIR = '/tmp/zpf_newsstand'
+CACHE_DIR = TMP_DIR + '/requests_cache'
+FORCED_CACHE_MARKER = TMP_DIR + '/forced_cache'
 
 
 _parser = argparse.ArgumentParser(description=__doc__,
                                   formatter_class=argparse.ArgumentDefaultsHelpFormatter)
 
 
+# Example from cachecontrol documentation
+class OneWeekHeuristic(BaseHeuristic):
+
+    def update_headers(self, response):
+        date = parsedate(response.headers['date'])
+        expires = datetime(*date[:6]) + timedelta(weeks=1)
+        return {
+            'expires' : formatdate(calendar.timegm(expires.timetuple())),
+            'cache-control' : 'public',
+        }
+
+    def warning(self, response):
+        msg = 'Automatically cached! Response is Stale.'
+        return '110 - "%s"' % msg
+
+
 def main(argv):
-    _parser.add_argument('--output_dir',
+    _parser.add_argument('--output-dir',
                          help='path to directory where to store output in',
                          default='programme')
-    _parser.add_argument('--output_name',
+    _parser.add_argument('--output-name',
                          help='name of the generated csv and json',
                          default='programme')
-    _parser.add_argument('--stage_filter',
+    _parser.add_argument('--stage-filter',
                          help='list of stages to select, omit to get all stages',
                          nargs='+',
                          metavar='STAGENAME',
@@ -40,16 +64,28 @@ def main(argv):
     _parser.add_argument('--source',
                          help='URL of the a-z programme page',
                          default=PROGRAMME_AZ_URL)
-    _parser.add_argument('--merge_csv',
+    _parser.add_argument('--merge-csv',
                          help='csv file with extra columns to merge, act name is the key')
+    _parser.add_argument('--force-cache',
+                         help='cache ZPF website responses for some time, regardless of cache control headers (for faster testing)',
+                         action='store_true')
 
     args = _parser.parse_args(argv)
+
+    if args.force_cache:
+        open(FORCED_CACHE_MARKER, 'a').close()
+    else:
+        if os.path.exists(FORCED_CACHE_MARKER):
+            print 'cleaning the cache because it was forced before'
+            shutil.rmtree(CACHE_DIR)
+            os.unlink(FORCED_CACHE_MARKER)
 
     if not os.path.exists(CACHE_DIR):
         os.makedirs(CACHE_DIR)
 
     session = CacheControl(requests.Session(),
-                           cache=FileCache(CACHE_DIR))
+                           cache=FileCache(CACHE_DIR),
+                           heuristic=OneWeekHeuristic() if args.force_cache else None)
 
     programme_az_html = session.get(PROGRAMME_AZ_URL).content
     programme = zpfwebsite.parser.parse_program_az(programme_az_html, session)

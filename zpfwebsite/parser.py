@@ -15,7 +15,7 @@ def parse_program_az(az_html, session):
         actinfo['img_src'] = img.get('data-src')
 
         print u'getting and parsing page for act {}/{} "{}"'.format(act_number, len(acts), actinfo['name'])
-        act_html = session.get(actinfo['url'], verify=False).content
+        act_html = session.get(actinfo['url']).content
         tree_act = html.fromstring(act_html)
         div_playdate = tree_act.xpath(
             "//div[@class='playDate']")
