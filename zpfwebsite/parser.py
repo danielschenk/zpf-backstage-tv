@@ -52,7 +52,8 @@ def parse_program_az(az_html, session):
                 text = country_and_genre[0].text
                 if text.find('(') > -1:
                     actinfo['country'] = text.split('(')[1].split(')')[0]
-                    actinfo['genre'] = text.split(' ')[1]
+                    # This span somehow contains a funky amount of whitespace.
+                    actinfo['genre'] = text.rstrip().rsplit(' ', 1)[1]
                 else:
                     print u'no country and genre found for {}'.format(actinfo['name'])
             else:

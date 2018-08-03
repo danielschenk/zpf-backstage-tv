@@ -60,13 +60,14 @@ def main(argv):
             filtered_programme[name] = act
 
     for name, act in filtered_programme.iteritems():
-        act_dirname = hashlib.sha1(name).hexdigest()
+        act_dirname = hashlib.sha1(name.encode('utf8')).hexdigest()
         act_path = os.path.join(args.output_dir, act_dirname)
         if not os.path.exists(act_path):
             os.makedirs(act_path)
 
         print u'getting image for act {}'.format(name)
         image_data = session.get(act['img_src']).content
+        relative_image_path = os.path.join(act_dirname, os.path.basename(act['img_src']))
         image_path = os.path.join(act_path, os.path.basename(act['img_src']))
         write = False
         if os.path.exists(image_path):
@@ -80,7 +81,8 @@ def main(argv):
             print u'(re)writing image for act {}'.format(name)
             with open(image_path, 'wb') as f:
                 f.write(image_data)
-        act['image'] = image_path
+        # Image path relative to csv
+        act['image'] = relative_image_path
 
         day_map = {
             'do': 'donderdag',
