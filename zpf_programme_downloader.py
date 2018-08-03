@@ -33,11 +33,14 @@ _parser = argparse.ArgumentParser(description=__doc__,
                                   formatter_class=argparse.ArgumentDefaultsHelpFormatter)
 
 
-# Example from cachecontrol documentation
+# Modified example from cachecontrol documentation
 class OneWeekHeuristic(BaseHeuristic):
 
     def update_headers(self, response):
-        date = parsedate(response.headers['date'])
+        if 'date' in response.headers:
+            date = parsedate(response.headers['date'])
+        else:
+            date = calendar.timegm(datetime.now().timetuple())
         expires = datetime(*date[:6]) + timedelta(weeks=1)
         return {
             'expires' : formatdate(calendar.timegm(expires.timetuple())),
@@ -72,19 +75,14 @@ def main(argv):
 
     args = _parser.parse_args(argv)
 
+    cache_dir = CACHE_DIR
     if args.force_cache:
-        open(FORCED_CACHE_MARKER, 'a').close()
-    else:
-        if os.path.exists(FORCED_CACHE_MARKER):
-            print 'cleaning the cache because it was forced before'
-            shutil.rmtree(CACHE_DIR)
-            os.unlink(FORCED_CACHE_MARKER)
-
-    if not os.path.exists(CACHE_DIR):
-        os.makedirs(CACHE_DIR)
+        cache_dir += '_DEV'
+    if not os.path.exists(cache_dir):
+        os.makedirs(cache_dir)
 
     session = CacheControl(requests.Session(),
-                           cache=FileCache(CACHE_DIR),
+                           cache=FileCache(cache_dir),
                            heuristic=OneWeekHeuristic() if args.force_cache else None)
 
     programme_az_html = session.get(PROGRAMME_AZ_URL).content
