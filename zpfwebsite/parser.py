@@ -14,7 +14,8 @@ def parse_program_az(az_html, session):
         actinfo['url'] = a.get('href')
         actinfo['img_src'] = img.get('data-src')
 
-        print u'getting and parsing page for act {}/{} "{}"'.format(act_number, len(acts), actinfo['name'])
+        safename = actinfo['name'].encode('ascii', errors='ignore')
+        print 'getting and parsing page for act {}/{} "{}"'.format(act_number, len(acts), safename)
         act_html = session.get(actinfo['url']).content
         tree_act = html.fromstring(act_html)
         div_playdate = tree_act.xpath(
@@ -49,9 +50,9 @@ def parse_program_az(az_html, session):
                                                         end=time.text.rsplit(' ')[2]))
                         time_idx += 1
                 else:
-                    print u'no time found for {}'.format(actinfo['name'])
+                    print 'no time found for {}'.format(safename)
             else:
-                print u'no day found for {}'.format(actinfo['name'])
+                print 'no day found for {}'.format(safename)
 
             country_and_genre = tree_act.xpath(
                 "//span[contains(concat(' ', @class, ' '), ' countryAndGenre ')]")
@@ -62,16 +63,16 @@ def parse_program_az(az_html, session):
                     actinfo['country'] = match.group(1)
                     actinfo['genre'] = match.group(2).rstrip()
                 else:
-                    print u'no country and genre found for {}'.format(actinfo['name'])
+                    print 'no country and genre found for {}'.format(safename)
             else:
-                print u'no country and genre found for {}'.format(actinfo['name'])
+                print 'no country and genre found for {}'.format(safename)
 
             for show in act_shows:
                 show_key = '{}_{}_{}'.format(actinfo['name'].encode('ascii', errors='ignore'), show['day'], show['showtime'])
                 show.update(actinfo)
                 programme[show_key] = show
         else:
-            print u'unexpected structure in page of act "{}", skipping'.format(actinfo['name'])
+            print 'unexpected structure in page of act "{}", skipping'.format(safename)
 
         act_number += 1
 
