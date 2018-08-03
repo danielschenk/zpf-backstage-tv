@@ -1,4 +1,5 @@
 from lxml import html
+import re
 
 def parse_program_az(az_html, session):
     tree = html.fromstring(az_html)
@@ -50,10 +51,10 @@ def parse_program_az(az_html, session):
                 "//span[contains(concat(' ', @class, ' '), ' countryAndGenre ')]")
             if country_and_genre:
                 text = country_and_genre[0].text
-                if text.find('(') > -1:
-                    actinfo['country'] = text.split('(')[1].split(')')[0]
-                    # This span somehow contains a funky amount of whitespace.
-                    actinfo['genre'] = text.rstrip().rsplit(' ', 1)[1]
+                match = re.match('\((\S+)\)\s*([\w ]+)', text, flags=re.UNICODE)
+                if match:
+                    actinfo['country'] = match.group(1)
+                    actinfo['genre'] = match.group(2).rstrip()
                 else:
                     print u'no country and genre found for {}'.format(actinfo['name'])
             else:
