@@ -136,18 +136,23 @@ def main(argv):
         with open(args.merge_csv, 'r') as f:
             reader = csv.DictReader(f)
             for line in reader:
-                if line['name'] in filtered_programme:
-                    filtered_programme[line['name']].update(line)
+                if line['id'] in filtered_programme:
+                    filtered_programme[line['id']].update(line)
 
     with open(os.path.join(args.output_dir, args.output_name + '.json'), 'w') as f:
         json.dump(filtered_programme, f, indent=4, separators=(',', ': '))
 
     with open(os.path.join(args.output_dir, args.output_name + '.csv'), 'w') as f:
-        writer = csv.DictWriter(f, ['dag','name','genre','getin','dressingroom','soundcheck','linecheck','showtime','end','country','image','description','local'],
+        writer = csv.DictWriter(f, ['id','dag','name','genre','getin','dressingroom','soundcheck','linecheck','showtime','end','country','local','image','description'],
                                 extrasaction='ignore')
         writer.writeheader()
-        for k, v in filtered_programme.iteritems():
-            writer.writerow({k: v.encode('utf8') for k, v in v.iteritems()})
+        for show_key, show_info in filtered_programme.iteritems():
+            rowdict = {}
+            rowdict['id'] = show_key.encode('utf8')
+            for key, value in show_info.iteritems():
+                rowdict[key] = value.encode('utf8')
+
+            writer.writerow(rowdict)
 
     return 0
 

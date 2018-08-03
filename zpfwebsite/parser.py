@@ -32,18 +32,24 @@ def parse_program_az(az_html, session):
 
             actinfo['description'] = '<p>' + '</p><p>'.join(paragraphs) + '</p>'
             actinfo['stage'] = div_playdate[0].findall("span")[1].text
-            time = tree_act.xpath(
-                "//span[contains(concat(' ', @class, ' '), ' time ')]")
-            if time:
-                actinfo['showtime'] = time[0].text.split(' ')[0]
-                actinfo['end'] = time[0].text.rsplit(' ')[2]
-            else:
-                print u'no time found for {}'.format(actinfo['name'])
 
-            day = tree_act.xpath(
+            act_shows = []
+            days = tree_act.xpath(
                 "//span[contains(concat(' ', @class, ' '), ' day ')]")
-            if day:
-                actinfo['day'] = day[0].text
+            if days:
+                for day in days:
+                    act_shows.append(dict(day=day.text))
+
+                times = tree_act.xpath(
+                    "//span[contains(concat(' ', @class, ' '), ' time ')]")
+                if times:
+                    time_idx = 0
+                    for time in times:
+                        act_shows[time_idx].update(dict(showtime=time.text.split(' ')[0],
+                                                        end=time.text.rsplit(' ')[2]))
+                        time_idx += 1
+                else:
+                    print u'no time found for {}'.format(actinfo['name'])
             else:
                 print u'no day found for {}'.format(actinfo['name'])
 
@@ -60,7 +66,10 @@ def parse_program_az(az_html, session):
             else:
                 print u'no country and genre found for {}'.format(actinfo['name'])
 
-            programme[actinfo['name']] = actinfo
+            for show in act_shows:
+                show_key = u'{}_{}_{}'.format(actinfo['name'], show['day'], show['showtime'])
+                show.update(actinfo)
+                programme[show_key] = show
         else:
             print u'unexpected structure in page of act "{}", skipping'.format(actinfo['name'])
 
