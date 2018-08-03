@@ -40,7 +40,7 @@ class OneWeekHeuristic(BaseHeuristic):
         if 'date' in response.headers:
             date = parsedate(response.headers['date'])
         else:
-            date = calendar.timegm(datetime.now().timetuple())
+            date = datetime.now().timetuple()
         expires = datetime(*date[:6]) + timedelta(weeks=1)
         return {
             'expires' : formatdate(calendar.timegm(expires.timetuple())),
