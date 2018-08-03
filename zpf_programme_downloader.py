@@ -95,12 +95,13 @@ def main(argv):
             filtered_programme[name] = act
 
     for name, act in filtered_programme.iteritems():
+        safename = name.encode('ascii', errors='ignore')
         act_dirname = hashlib.sha1(name.encode('utf8')).hexdigest()
         act_path = os.path.join(args.output_dir, act_dirname)
         if not os.path.exists(act_path):
             os.makedirs(act_path)
 
-        print u'getting image for act {}'.format(name)
+        print 'getting image for act {}'.format(safename)
         image_data = session.get(act['img_src']).content
         relative_image_path = os.path.join(act_dirname, os.path.basename(act['img_src']))
         image_path = os.path.join(act_path, os.path.basename(act['img_src']))
@@ -113,7 +114,7 @@ def main(argv):
         else:
             write = True
         if write:
-            print u'(re)writing image for act {}'.format(name)
+            print '(re)writing image for act {}'.format(safename)
             with open(image_path, 'wb') as f:
                 f.write(image_data)
         # Image path relative to csv
@@ -137,9 +138,11 @@ def main(argv):
                 if line['id'] in filtered_programme:
                     filtered_programme[line['id']].update(line)
 
+    print 'writing json'
     with open(os.path.join(args.output_dir, args.output_name + '.json'), 'w') as f:
         json.dump(filtered_programme, f, indent=4, separators=(',', ': '))
 
+    print 'writing csv'
     with open(os.path.join(args.output_dir, args.output_name + '.csv'), 'w') as f:
         writer = csv.DictWriter(f, ['id','dag','name','genre','getin','dressingroom','soundcheck','linecheck','showtime','end','country','local','image','description'],
                                 extrasaction='ignore')
@@ -152,6 +155,7 @@ def main(argv):
 
             writer.writerow(rowdict)
 
+    print 'KTHXBYE'
     return 0
 
 
