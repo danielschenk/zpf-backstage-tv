@@ -21,7 +21,8 @@ PROGRAMME_AZ_URL = ZPF_URL + '/programme/a-z'
 CACHE_DIR = '/tmp/zpf_newsstand/requests_cache'
 
 
-_parser = argparse.ArgumentParser(description=__doc__)
+_parser = argparse.ArgumentParser(description=__doc__,
+                                  formatter_class=argparse.ArgumentDefaultsHelpFormatter)
 
 
 def main(argv):
