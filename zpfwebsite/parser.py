@@ -68,7 +68,7 @@ def parse_program_az(az_html, session):
                 print 'no country and genre found for {}'.format(safename)
 
             for show in act_shows:
-                show_key = '{}_{}_{}'.format(actinfo['name'].encode('ascii', errors='ignore'), show['day'], show['showtime'])
+                show_key = '{}_{}_{}'.format(safename, show['day'], show['showtime'])
                 show.update(actinfo)
                 programme[show_key] = show
         else:
