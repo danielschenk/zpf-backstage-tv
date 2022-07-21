@@ -15,7 +15,7 @@ def parse_program_az(az_html, session):
         actinfo['img_src'] = img.get('data-src')
 
         safename = actinfo['name'].encode('ascii', errors='ignore')
-        print 'getting and parsing page for act {}/{} "{}"'.format(act_number, len(acts), safename)
+        print('getting and parsing page for act {}/{} "{}"'.format(act_number, len(acts), safename))
         act_html = session.get(actinfo['url']).content
         tree_act = html.fromstring(act_html)
         div_playdate = tree_act.xpath(
@@ -50,9 +50,9 @@ def parse_program_az(az_html, session):
                                                         end=time.text.rsplit(' ')[2]))
                         time_idx += 1
                 else:
-                    print 'no time found for {}'.format(safename)
+                    print('no time found for {}'.format(safename))
             else:
-                print 'no day found for {}'.format(safename)
+                print('no day found for {}'.format(safename))
 
             country_and_genre = tree_act.xpath(
                 "//span[contains(concat(' ', @class, ' '), ' countryAndGenre ')]")
@@ -63,16 +63,16 @@ def parse_program_az(az_html, session):
                     actinfo['country'] = match.group(1)
                     actinfo['genre'] = match.group(2).rstrip()
                 else:
-                    print 'no country and genre found for {}'.format(safename)
+                    print('no country and genre found for {}'.format(safename))
             else:
-                print 'no country and genre found for {}'.format(safename)
+                print('no country and genre found for {}'.format(safename))
 
             for show in act_shows:
                 show_key = '{}_{}_{}'.format(safename, show['day'], show['showtime'])
                 show.update(actinfo)
                 programme[show_key] = show
         else:
-            print 'unexpected structure in page of act "{}", skipping'.format(safename)
+            print('unexpected structure in page of act "{}", skipping'.format(safename))
 
         act_number += 1
 
