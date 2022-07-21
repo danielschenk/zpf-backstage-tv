@@ -21,7 +21,7 @@ from email.utils import parsedate, formatdate
 import zpfwebsite.parser
 
 ZPF_URL = 'http://www.zomerparkfeest.nl'
-PROGRAMME_AZ_URL = ZPF_URL + '/programme/a-z'
+PROGRAMME_AZ_URL = ZPF_URL + '/programma'
 
 TMP_DIR = '/tmp/zpf_newsstand'
 CACHE_DIR = TMP_DIR + '/requests_cache'
@@ -85,7 +85,7 @@ def main(argv):
                            heuristic=OneWeekHeuristic() if args.force_cache else None)
 
     programme_az_html = session.get(PROGRAMME_AZ_URL).content
-    programme = zpfwebsite.parser.parse_program_az(programme_az_html, session)
+    programme = zpfwebsite.parser.parse_program_az(programme_az_html, session, stage="AMIGO")
     filtered_programme = {}
 
     stages = [stage.lower() for stage in args.stage_filter] if args.stage_filter else None
@@ -99,6 +99,9 @@ def main(argv):
         act_path = os.path.join(args.output_dir, act_dirname)
         if not os.path.exists(act_path):
             os.makedirs(act_path)
+
+        if "img_src" not in act:
+            continue
 
         print('getting image for act {}'.format(safename))
         image_data = session.get(act['img_src']).content
