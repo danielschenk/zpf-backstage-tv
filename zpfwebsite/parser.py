@@ -17,6 +17,16 @@ def parse_program_az(az_html, session, stage=None):
         if stage is not None and stage != actinfo["stage"]:
             continue
 
+        top_spans = act.find("div", class_="items-start").find_all("span")
+        if len(top_spans) == 2:
+            day_span, time_span = top_spans[0], top_spans[1]
+            actinfo["day"] = day_span.text.strip().lower()
+            times = time_span.text.split("-", maxsplit=1)
+            assert len(times) == 2, time_span
+            actinfo["start"], actinfo["end"] = times[0].strip(), times[1].strip()
+        else:
+            print(f'warning: act {actinfo["name"]} does not have 2 top spans, cannot determine act time')
+
         actinfo["url"] = act.find("a")["href"]
 
         img = act.find("img", class_="lazyloaded")
