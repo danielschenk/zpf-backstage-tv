@@ -6,10 +6,13 @@
     "configurations": [
 
         {
-            "name": " Programme downloader",
+            "name": "Programme downloader",
             "type": "python",
             "request": "launch",
             "program": "${workspaceFolder}/zpf_programme_downloader.py",
+            "args": [
+                "--force-cache"
+            ],
             "console": "integratedTerminal",
             "justMyCode": true
         }

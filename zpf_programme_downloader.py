@@ -7,7 +7,6 @@ import os
 import sys
 import argparse
 import requests
-import csv
 import json
 import hashlib
 from cachecontrol import CacheControl
@@ -21,7 +20,7 @@ from email.utils import parsedate, formatdate
 import zpfwebsite.parser
 
 ZPF_URL = 'http://www.zomerparkfeest.nl'
-PROGRAMME_AZ_URL = ZPF_URL + '/programma/schema/zaterdag-27-augustus'
+BLOCK_DIAGRAM_BASE_URL = ZPF_URL + '/programma/schema/'
 
 TMP_DIR = '/tmp/zpf_newsstand'
 CACHE_DIR = TMP_DIR + '/requests_cache'
@@ -63,11 +62,6 @@ def main(argv):
                          nargs='+',
                          metavar='STAGENAME',
                          default=None)
-    _parser.add_argument('--source',
-                         help='URL of the a-z programme page',
-                         default=PROGRAMME_AZ_URL)
-    _parser.add_argument('--merge-csv',
-                         help='csv file with extra columns to merge, act name is the key')
     _parser.add_argument('--force-cache',
                          help='cache ZPF website responses for some time, regardless of cache control headers (for faster testing)',
                          action='store_true')
@@ -84,16 +78,20 @@ def main(argv):
                            cache=FileCache(cache_dir),
                            heuristic=OneWeekHeuristic() if args.force_cache else None)
 
-    programme_az_html = session.get(PROGRAMME_AZ_URL).content
-    programme = zpfwebsite.parser.parse_program_block_diagram(programme_az_html, session, stage="AMIGO")
-    filtered_programme = {}
+    day_urls = [
+        ('donderdag', 'donderdag-25-augustus'),
+        ('vrijdag', 'vrijdag-26-augustus'),
+        ('zaterdag', 'zaterdag-27-augustus'),
+        ('zondag', 'zondag-28-augustus'),
+    ]
+    programme = {}
+    for day, url in day_urls:
+        print(f'getting {day}...')
+        html = session.get(BLOCK_DIAGRAM_BASE_URL + url).content
+        day_prog = zpfwebsite.parser.parse_program_block_diagram(html, session, day, stage='AMIGO')
+        programme.update(day_prog)
 
-    stages = [stage.lower() for stage in args.stage_filter] if args.stage_filter else None
     for name, act in programme.items():
-        if stages is None or (act['stage'] and act['stage'].lower() in stages):
-            filtered_programme[name] = act
-
-    for name, act in filtered_programme.items():
         safename = name.encode('ascii', errors='ignore')
         act_dirname = hashlib.sha1(name.encode('utf8')).hexdigest()
         act_path = os.path.join(args.output_dir, act_dirname)
@@ -133,16 +131,9 @@ def main(argv):
     if not os.path.exists(args.output_dir):
         os.makedirs(args.output_dir)
 
-    if args.merge_csv:
-        with open(args.merge_csv, 'r') as f:
-            reader = csv.DictReader(f)
-            for line in reader:
-                if line['id'] in filtered_programme:
-                    filtered_programme[line['id']].update(line)
-
     print('writing json')
     with open(os.path.join(args.output_dir, args.output_name + '.json'), 'w') as f:
-        json.dump(filtered_programme, f, indent=2, separators=(',', ': '))
+        json.dump(list(programme.values()), f, indent=2, separators=(',', ': '))
 
     print('KTHXBYE')
     return 0

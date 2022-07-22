@@ -3,7 +3,7 @@ import re
 from . import errors
 
 
-def parse_program_block_diagram(html, session, stage=None):
+def parse_program_block_diagram(html, session, day, stage=None):
     programme = {}
 
     soup = bs4.BeautifulSoup(html, features="lxml")
@@ -41,7 +41,7 @@ def parse_program_block_diagram(html, session, stage=None):
             info_text = act.find("span", class_="text-sm").text
             time_text = info_text.splitlines()[1].strip().replace('"', '')
             start, end = [t.strip() for t in time_text.split("-", maxsplit=1)]
-            entry["shows"].append({"start": start, "end": end})
+            entry["shows"].append({"day": day, "start": start, "end": end})
 
     return programme
 
