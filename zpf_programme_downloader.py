@@ -74,6 +74,9 @@ def main(argv):
     if not os.path.exists(cache_dir):
         os.makedirs(cache_dir)
 
+    if args.stage_filter:
+        print(f'warning: will only get stages: {", ".join(args.stage_filter)}')
+
     session = CacheControl(requests.Session(),
                            cache=FileCache(cache_dir),
                            heuristic=OneWeekHeuristic() if args.force_cache else None)

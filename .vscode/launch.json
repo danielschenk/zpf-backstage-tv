@@ -11,7 +11,9 @@
             "request": "launch",
             "program": "${workspaceFolder}/zpf_programme_downloader.py",
             "args": [
-                "--force-cache"
+                "--force-cache",
+                "--stage-filter",
+                "AMIGO"
             ],
             "console": "integratedTerminal",
             "justMyCode": true
