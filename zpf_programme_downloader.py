@@ -21,7 +21,7 @@ from email.utils import parsedate, formatdate
 import zpfwebsite.parser
 
 ZPF_URL = 'http://www.zomerparkfeest.nl'
-PROGRAMME_AZ_URL = ZPF_URL + '/programma'
+PROGRAMME_AZ_URL = ZPF_URL + '/programma/schema/zaterdag-27-augustus'
 
 TMP_DIR = '/tmp/zpf_newsstand'
 CACHE_DIR = TMP_DIR + '/requests_cache'
@@ -85,7 +85,7 @@ def main(argv):
                            heuristic=OneWeekHeuristic() if args.force_cache else None)
 
     programme_az_html = session.get(PROGRAMME_AZ_URL).content
-    programme = zpfwebsite.parser.parse_program_az(programme_az_html, session, stage="AMIGO")
+    programme = zpfwebsite.parser.parse_program_block_diagram(programme_az_html, session, stage="AMIGO")
     filtered_programme = {}
 
     stages = [stage.lower() for stage in args.stage_filter] if args.stage_filter else None
@@ -142,20 +142,7 @@ def main(argv):
 
     print('writing json')
     with open(os.path.join(args.output_dir, args.output_name + '.json'), 'w') as f:
-        json.dump(filtered_programme, f, indent=4, separators=(',', ': '))
-
-    print('writing csv')
-    with open(os.path.join(args.output_dir, args.output_name + '.csv'), 'w') as f:
-        writer = csv.DictWriter(f, ['id','dag','name','genre','getin','dressingroom','soundcheck','linecheck','showtime','end','country','local','image','description'],
-                                extrasaction='ignore')
-        writer.writeheader()
-        for show_key, show_info in filtered_programme.items():
-            rowdict = {}
-            rowdict['id'] = show_key.encode('utf8')
-            for key, value in show_info.items():
-                rowdict[key] = value.encode('utf8')
-
-            writer.writerow(rowdict)
+        json.dump(filtered_programme, f, indent=2, separators=(',', ': '))
 
     print('KTHXBYE')
     return 0
