@@ -3,9 +3,7 @@ import re
 from . import errors
 
 
-def parse_program_block_diagram(html, session, day, stage=None):
-    programme = {}
-
+def parse_program_block_diagram(html, session, day, programme: dict, stage_list=None):
     soup = bs4.BeautifulSoup(html, features="lxml")
     stage_rows = soup.find_all("div", class_="border-dashed")
     if not stage_rows:
@@ -13,7 +11,7 @@ def parse_program_block_diagram(html, session, day, stage=None):
 
     for row in stage_rows:
         stage_name = row.find("div", class_="translate-y-stage-name").text
-        if stage is not None and stage != stage_name:
+        if stage_list is not None and stage_name not in stage_list:
             continue
 
         acts = row.find_all("div", class_="flex-auto")
@@ -25,7 +23,7 @@ def parse_program_block_diagram(html, session, day, stage=None):
             name = link.text
 
             if name not in programme:
-                entry = programme[name] = {"shows": []}
+                entry = programme[name] = {}
                 entry["name"] = name
                 entry["url"] = link["href"]
 
@@ -35,15 +33,14 @@ def parse_program_block_diagram(html, session, day, stage=None):
                 paragraphs = soup_act.find_all("p")
                 entry["description"] = "\n\n".join(p.text for p in paragraphs)
                 entry["description_html"] = "".join(str(p) for p in paragraphs)
+                entry["shows"] = []
             else:
                 entry = programme[name]
 
             info_text = act.find("span", class_="text-sm").text
             time_text = info_text.splitlines()[1].strip().replace('"', '')
             start, end = [t.strip() for t in time_text.split("-", maxsplit=1)]
-            entry["shows"].append({"day": day, "start": start, "end": end})
-
-    return programme
+            entry["shows"].append({"day": day, "start": start, "end": end, "stage": stage_name})
 
 
 def parse_program_az(az_html, session, stage=None):

@@ -88,8 +88,8 @@ def main(argv):
     for day, url in day_urls:
         print(f'getting {day}...')
         html = session.get(BLOCK_DIAGRAM_BASE_URL + url).content
-        day_prog = zpfwebsite.parser.parse_program_block_diagram(html, session, day, stage='AMIGO')
-        programme.update(day_prog)
+        zpfwebsite.parser.parse_program_block_diagram(html, session, day, programme,
+                                                      args.stage_filter)
 
     for name, act in programme.items():
         safename = name.encode('ascii', errors='ignore')
