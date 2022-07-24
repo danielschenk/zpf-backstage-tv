@@ -28,10 +28,17 @@ class Website:
         if not os.path.exists(cache_dir):
             os.makedirs(cache_dir)
 
-        heuristic = _OneWeekHeuristic() if force_cache else None
+        heuristic = _DaysHeuristic(7) if force_cache else None
         self.session = CacheControl(requests.Session(),
                                     cache=FileCache(cache_dir),
                                     heuristic=heuristic)
+
+        # Aggressively cache act detail pages. We only use them for the
+        # description, which is unlikely to change, and the ZPF WiFi can
+        # be terribly slow
+        self.details_session = CacheControl(requests.Session(),
+                                            cache=FileCache(cache_dir),
+                                            heuristic=_DaysHeuristic(1))
 
     def get_programme(self, stage_list: Optional[List[str]] = None) -> Mapping[str, Mapping]:
         """Gets festival programme"""
@@ -78,7 +85,7 @@ class Website:
                     entry["url"] = link["href"]
 
                     print(f'getting and parsing page for act "{entry["name"]}"')
-                    act_html = self.session.get(entry["url"]).content
+                    act_html = self.details_session.get(entry["url"]).content
                     soup_act = bs4.BeautifulSoup(act_html, features="lxml")
                     paragraphs = soup_act.find_all("p")
                     entry["description"] = "\n\n".join(p.text for p in paragraphs)
@@ -138,13 +145,17 @@ class Website:
 
 
 # Modified example from cachecontrol documentation
-class _OneWeekHeuristic(BaseHeuristic):
+class _DaysHeuristic(BaseHeuristic):
+    def __init__(self, days) -> None:
+        super().__init__()
+        self._days = days
+
     def update_headers(self, response):
         if 'date' in response.headers:
             date = parsedate(response.headers['date'])
         else:
             date = datetime.now().timetuple()
-        expires = datetime(*date[:6]) + timedelta(weeks=1)
+        expires = datetime(*date[:6]) + timedelta(days=self._days)
         return {
             'expires' : formatdate(calendar.timegm(expires.timetuple())),
             'cache-control' : 'public',
