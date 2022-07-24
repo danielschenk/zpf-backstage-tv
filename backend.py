@@ -4,6 +4,8 @@
 
 import socket
 import threading
+import pickle
+import os
 from flask import Flask, render_template, jsonify, make_response, request
 from apscheduler.schedulers.background import BackgroundScheduler
 
@@ -41,9 +43,19 @@ def update_programme_cache():
     with programme_lock:
         global programme
         programme = programme_temp.copy()
+    with app.open_instance_resource("programme_cache.pickle", "wb+") as f:
+        pickle.dump(programme_temp, f)
 
 
-update_programme_cache()
+try:
+    with app.open_instance_resource("programme_cache.pickle", "rb") as f:
+        print("found programme cache on disk")
+        programme = pickle.load(f)
+except FileNotFoundError:
+    print("no programme cache on disk, need initial fetch")
+    update_programme_cache()
+
+
 scheduler = BackgroundScheduler()
 scheduler.add_job(update_programme_cache, "interval", minutes=15)
 scheduler.start()
