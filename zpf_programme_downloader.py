@@ -17,7 +17,7 @@ from cachecontrol.heuristics import BaseHeuristic
 from datetime import datetime, timedelta
 from email.utils import parsedate, formatdate
 
-import zpfwebsite.parser
+import zpfwebsite
 
 ZPF_URL = 'http://www.zomerparkfeest.nl'
 BLOCK_DIAGRAM_BASE_URL = ZPF_URL + '/programma/schema/'
@@ -29,25 +29,6 @@ FORCED_CACHE_MARKER = TMP_DIR + '/forced_cache'
 
 _parser = argparse.ArgumentParser(description=__doc__,
                                   formatter_class=argparse.ArgumentDefaultsHelpFormatter)
-
-
-# Modified example from cachecontrol documentation
-class OneWeekHeuristic(BaseHeuristic):
-
-    def update_headers(self, response):
-        if 'date' in response.headers:
-            date = parsedate(response.headers['date'])
-        else:
-            date = datetime.now().timetuple()
-        expires = datetime(*date[:6]) + timedelta(weeks=1)
-        return {
-            'expires' : formatdate(calendar.timegm(expires.timetuple())),
-            'cache-control' : 'public',
-        }
-
-    def warning(self, response):
-        msg = 'Automatically cached! Response is Stale.'
-        return '110 - "%s"' % msg
 
 
 def main(argv):
@@ -77,22 +58,8 @@ def main(argv):
     if args.stage_filter:
         print(f'warning: will only get stages: {", ".join(args.stage_filter)}')
 
-    session = CacheControl(requests.Session(),
-                           cache=FileCache(cache_dir),
-                           heuristic=OneWeekHeuristic() if args.force_cache else None)
-
-    day_urls = [
-        ('donderdag', 'donderdag-25-augustus'),
-        ('vrijdag', 'vrijdag-26-augustus'),
-        ('zaterdag', 'zaterdag-27-augustus'),
-        ('zondag', 'zondag-28-augustus'),
-    ]
-    programme = {}
-    for day, url in day_urls:
-        print(f'getting {day}...')
-        html = session.get(BLOCK_DIAGRAM_BASE_URL + url).content
-        zpfwebsite.parser.parse_program_block_diagram(html, session, day, programme,
-                                                      args.stage_filter)
+    website = zpfwebsite.Website(args.force_cache)
+    programme = website.get_programme(args.stage_filter)
 
     for name, act in programme.items():
         safename = name.encode('ascii', errors='ignore')
@@ -105,7 +72,7 @@ def main(argv):
             continue
 
         print('getting image for act {}'.format(safename))
-        image_data = session.get(act['img_src']).content
+        image_data = website.session.get(act['img_src']).content
         relative_image_path = os.path.join(act_dirname, os.path.basename(act['img_src']))
         image_path = os.path.join(act_path, os.path.basename(act['img_src']))
         write = False
