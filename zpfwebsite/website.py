@@ -2,6 +2,7 @@ import re
 import os
 import pathlib
 import hashlib
+import datetime
 from typing import Optional, List, Mapping
 import requests
 from cachecontrol import CacheControl
@@ -47,11 +48,12 @@ class Website:
             ('zaterdag', 'zaterdag-27-augustus'),
             ('zondag', 'zondag-28-augustus'),
         ]
-        programme = {}
+        programme = {"fetch_time": datetime.now().isoformat(), "acts": {}}
         for day, url in day_urls:
             print(f'getting {day}...')
             html = self.session.get(self.BLOCK_DIAGRAM_BASE_URL + url).content
-            self._parse_block_diagram(html, day, programme, stage_list)
+            self._parse_block_diagram(html, day, programme["acts"], stage_list)
+        print("done getting programme")
 
         return programme
 
