@@ -1,5 +1,6 @@
 import re
 import os
+import pathlib
 from typing import Optional, List, Mapping
 import requests
 from cachecontrol import CacheControl
@@ -17,27 +18,23 @@ class Website:
     ZPF_URL = "http://www.zomerparkfeest.nl"
     BLOCK_DIAGRAM_BASE_URL = ZPF_URL + "/programma/schema/"
 
-    TMP_DIR = "/tmp/zpfwebsite"
-    CACHE_DIR = TMP_DIR + "/requests_cache"
-    FORCED_CACHE_MARKER = TMP_DIR + "/forced_cache"
-
     def __init__(self, force_cache=False) -> None:
-        cache_dir = self.CACHE_DIR
-        if force_cache:
-            cache_dir += '_DEV'
-        if not os.path.exists(cache_dir):
-            os.makedirs(cache_dir)
+        home = pathlib.Path(os.path.expanduser("~"))
+        cache_dir = "requests-cache-dev" if force_cache else "requests_cache"
+        cache_path = home / ".python-zpfwebsite" / cache_dir
+        print(f"storing requests cache in: {cache_path}")
+        cache_path.mkdir(parents=True, exist_ok=True)
 
         heuristic = _DaysHeuristic(7) if force_cache else None
         self.session = CacheControl(requests.Session(),
-                                    cache=FileCache(cache_dir),
+                                    cache=FileCache(cache_path),
                                     heuristic=heuristic)
 
         # Aggressively cache act detail pages. We only use them for the
         # description, which is unlikely to change, and the ZPF WiFi can
         # be terribly slow
         self.details_session = CacheControl(requests.Session(),
-                                            cache=FileCache(cache_dir),
+                                            cache=FileCache(cache_path),
                                             heuristic=_DaysHeuristic(1))
 
     def get_programme(self, stage_list: Optional[List[str]] = None) -> Mapping[str, Mapping]:
