@@ -1,6 +1,7 @@
 import re
 import os
 import pathlib
+import hashlib
 from typing import Optional, List, Mapping
 import requests
 from cachecontrol import CacheControl
@@ -76,8 +77,9 @@ class Website:
                 link = act.find("a")
                 name = link.text
 
-                if name not in program:
-                    entry = program[name] = {}
+                hash = hashlib.sha1(name.encode("utf8")).hexdigest()
+                if hash not in program:
+                    entry = program[hash] = {}
                     entry["name"] = name
                     entry["url"] = link["href"]
 
@@ -89,7 +91,7 @@ class Website:
                     entry["description_html"] = "".join(str(p) for p in paragraphs)
                     entry["shows"] = []
                 else:
-                    entry = program[name]
+                    entry = program[hash]
 
                 info_text = act.find("span", class_="text-sm").text
                 time_text = info_text.splitlines()[1].strip().replace('"', '')

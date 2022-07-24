@@ -103,7 +103,7 @@ def main(argv):
 
     print('writing json')
     with open(os.path.join(args.output_dir, args.output_name + '.json'), 'w') as f:
-        json.dump(list(programme.values()), f, indent=2, separators=(',', ': '))
+        json.dump(programme, f, indent=2, separators=(',', ': '))
 
     print('KTHXBYE')
     return 0
