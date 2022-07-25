@@ -1,0 +1,4 @@
+-r requirements.txt
+# this one is installed via apk in case of docker
+lxml~=4.8.0
+

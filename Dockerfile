@@ -1,9 +1,14 @@
 FROM python:3.8-alpine
 COPY requirements.txt /
-# musl-dev and gcc required to build backports.zoneinfo with pip
-RUN apk add -u gcc musl-dev && \
+
+# build dependencies for certain pip packages
+ARG PIP_BUILD_DEPS="gcc musl-dev"
+RUN apk add -u \ 
+    ${PIP_BUILD_DEPS} \
+    py3-lxml=4.8.0-r0 \
+    && \
     pip install -r requirements.txt && \
-    apk del gcc musl-dev
+    apk del ${PIP_BUILD_DEPS}
 
 COPY zpfwebsite /zpfwebsite
 COPY instance /instance
