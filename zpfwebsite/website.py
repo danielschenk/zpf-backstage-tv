@@ -19,6 +19,7 @@ from . import errors
 class Website:
     ZPF_URL = "http://www.zomerparkfeest.nl"
     BLOCK_DIAGRAM_BASE_URL = ZPF_URL + "/programma/schema/"
+    _BS4_FEATURES = "html.parser"
 
     def __init__(self, force_cache=False) -> None:
         home = pathlib.Path(os.path.expanduser("~"))
@@ -61,7 +62,7 @@ class Website:
         """Parses block diagram for single day and adds results to the given program
         dict"""
 
-        soup = bs4.BeautifulSoup(html, features="lxml")
+        soup = bs4.BeautifulSoup(html, features=self._BS4_FEATURES)
         stage_rows = soup.find_all("div", class_="border-dashed")
         if not stage_rows:
             raise errors.ZpfWebsiteError("no stage rows found")
@@ -87,7 +88,7 @@ class Website:
 
                     print(f'getting and parsing page for act "{entry["name"]}"')
                     act_html = self.details_session.get(entry["url"]).content
-                    soup_act = bs4.BeautifulSoup(act_html, features="lxml")
+                    soup_act = bs4.BeautifulSoup(act_html, features=self._BS4_FEATURES)
                     paragraphs = soup_act.find_all("p")
                     entry["description"] = "\n\n".join(p.text for p in paragraphs)
                     entry["description_html"] = "".join(str(p) for p in paragraphs)
