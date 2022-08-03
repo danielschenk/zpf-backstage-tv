@@ -49,6 +49,13 @@ def serve_dressing_room(act_key):
             return "None"
 
 
+@app.route("/dressing_room/<act_key>", methods=["PUT"])
+def update_dressing_room(act_key):
+    with rooms_lock:
+        rooms[act_key] = request.data.decode("utf-8")
+    return "success"
+
+
 def update_programme_cache():
     website = zpfwebsite.Website()
     programme_temp = website.get_programme(stage_list=["AMIGO"])
