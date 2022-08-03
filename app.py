@@ -25,9 +25,8 @@ def get_resource(url, session):
 @app.route("/")
 def serve_index():
     """Main page handler"""
-
-    hostname = socket.gethostname()
-    return render_template('index.html', **locals())
+    with programme_lock:
+        return render_template("index.html", acts=programme["acts"])
 
 
 @app.route("/programme")

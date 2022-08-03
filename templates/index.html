@@ -1,0 +1,24 @@
+<head>
+    <title>AmigoText backend</title>
+</head>
+<body>
+    <h1>Dressing Room Entry</h1>
+    {% block content %}
+    <table id="data" class="table table-striped">
+        <thead>
+        <tr>
+            <th>Act</th>
+            <th>Room</th>
+        </tr>
+        </thead>
+        <tbody>
+        {% for key, act in acts.items() %}
+            <tr>
+                <td>{{ act["name"] }}</td>
+                <td>TODO</td>
+            </tr>
+        {% endfor %}
+        </tbody>
+    </table>
+    {% endblock %}
+</body>
