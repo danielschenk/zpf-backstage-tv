@@ -15,10 +15,19 @@
         {% for key, act in acts.items() %}
             <tr>
                 <td>{{ act["name"] }}</td>
-                <td>TODO</td>
+                <td>
+                    <button onclick="updateDressingRoom('{{ key }}', 1)">1</button>
+                    <button onclick="updateDressingRoom('{{ key }}', 2)">2</button>
+                    <button onclick="updateDressingRoom('{{ key }}', 3)">3</button>
+                    <button onclick="updateDressingRoom('{{ key }}', 4)">4</button>
+                    <button onclick="updateDressingRoom('{{ key }}', 5)">5</button>
+                    <button onclick="updateDressingRoom('{{ key }}', 6)">6</button>
+                </td>
             </tr>
         {% endfor %}
         </tbody>
     </table>
     {% endblock %}
+
+    <script src="{{ url_for('static', filename="index.js") }}"></script>
 </body>
