@@ -13,6 +13,10 @@ import zpfwebsite
 
 programme = {}
 programme_lock = threading.Lock()
+
+rooms = {}
+rooms_lock = threading.Lock()
+
 app = Flask(__name__)
 
 
@@ -34,6 +38,15 @@ def serve_programme():
     with programme_lock:
         response = make_response(jsonify(programme))
     return response
+
+
+@app.route("/dressing_room/<act_key>", methods=["GET"])
+def serve_dressing_room(act_key):
+    with rooms_lock:
+        if act_key in rooms:
+            return str(rooms[act_key])
+        else:
+            return "None"
 
 
 def update_programme_cache():
