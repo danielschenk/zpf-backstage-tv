@@ -5,6 +5,7 @@ RUN STATIC_DEPS=true pip install -r requirements.txt
 COPY zpfwebsite /zpfwebsite
 COPY instance /instance
 COPY static /static
+COPY templates /templates
 COPY app.py /
 ENV PYTHONUNBUFFERED 1
 
