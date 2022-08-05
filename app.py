@@ -40,7 +40,7 @@ def serve_programme():
     return response
 
 
-@app.route("/dressing_room/<act_key>", methods=["GET"])
+@app.route("/dressing_rooms/<act_key>", methods=["GET"])
 def serve_dressing_room(act_key):
     with rooms_lock:
         if act_key in rooms:
@@ -49,11 +49,17 @@ def serve_dressing_room(act_key):
             return "None"
 
 
-@app.route("/dressing_room/<act_key>", methods=["PUT"])
+@app.route("/dressing_rooms/<act_key>", methods=["PUT"])
 def update_dressing_room(act_key):
     with rooms_lock:
         rooms[act_key] = request.data.decode("utf-8")
     return "success"
+
+
+@app.route("/dressing_rooms")
+def serve_dressing_rooms():
+    with rooms_lock:
+        return jsonify(rooms)
 
 
 def update_programme_cache():

@@ -1,5 +1,5 @@
-function updateDressingRoom(actKey, roomNumber) {
-    fetch("dressing_room/" + actKey, {
+function setDressingRoom(actKey, roomNumber) {
+    fetch("dressing_rooms/" + actKey, {
         "method": "PUT",
         "body": roomNumber
     })
