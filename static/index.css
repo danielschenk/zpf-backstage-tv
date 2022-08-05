@@ -1,0 +1,8 @@
+button.dressing-room {
+    min-height: 35px;
+    min-width: 35px;
+}
+
+button.dressing-room.selected {
+    background-color: lightblue;
+}

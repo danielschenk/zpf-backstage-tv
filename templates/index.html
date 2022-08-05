@@ -1,7 +1,8 @@
 <head>
     <title>AmigoText backend</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='index.css') }}" />
 </head>
-<body>
+<body onload="updateAllDressingRoomButtons()">
     <h1>Dressing Room Entry</h1>
     {% block content %}
     <table id="data" class="table table-striped">
@@ -16,12 +17,23 @@
             <tr>
                 <td>{{ act["name"] }}</td>
                 <td>
-                    {% for room in ["1", "2", "3", "4", "5", "6", "None"] %}
-                        <button onclick="setDressingRoom('{{ key }}', {{ room }})"
-                            class="dressing-room-button">
+                    <div class="dressing-room-buttons" style="display: none;">
+                        {% for room in ["1", "2", "3", "4", "5", "6", "None"] %}
+                            <button
+                                onclick="setDressingRoom('{{ key }}', '{{ room }}')"
+                                class="dressing-room"
+                                id="{{ key }}-{{ room }}"
+                            >
                                 {{ room }}
-                        </button>
-                    {% endfor %}
+                            </button>
+                        {% endfor %}
+                    </div>
+                    <div class="dressing-room-loader">
+                        <img
+                            src="{{ url_for('static', filename='icons8-dots-loading.gif') }}"
+                            height="30"
+                        />
+                    </div>
                 </td>
             </tr>
         {% endfor %}
