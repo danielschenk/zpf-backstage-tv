@@ -7,20 +7,20 @@
     <h1>Dressing Room Entry</h1>
     {% block content %}
     <table id="data" class="table table-striped">
-        <thead>
-        <tr>
-            <th>Act</th>
-            <th>Room</th>
-        </tr>
-        </thead>
         <tbody>
         {% for key, act in acts.items() %}
+            <tr class="act-name">
+                <td colspan="2" class="act-name">{{ act["name"] }}</td>
+            </tr>
             <tr>
-                <td class="act-name">{{ act["name"] }}</td>
                 <td class="act-detail-header">Showtimes: </td>
-                {% for show in act["shows"] %}
-                    <td class="act-detail">{{ show["start"] }} - {{ show["end"] }}</td>
-                {% endfor %}
+                <td class="act-detail">
+                    <ul>
+                        {% for show in act["shows"] %}
+                            <li>{{ show["start"] }} - {{ show["end"] }}</li>
+                        {% endfor %}
+                    </ul>
+                </td>
             </tr>
             <tr>
                 <td class="act-detail-header">Dressing room: </td>

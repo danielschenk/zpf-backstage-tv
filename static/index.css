@@ -21,3 +21,18 @@ button.dressing-room.selected {
 img.dressing-room-loader {
     height: 30;
 }
+
+td {
+    border-style: solid;
+    border-color: #eeeeee;
+    border-width: 1px;
+}
+
+tr.act-name {
+    margin-top: 2em;
+}
+
+td.act-name {
+    background-color: lightcyan;
+    font-size: 50pt;
+}
