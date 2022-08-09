@@ -29,10 +29,6 @@ function updateAllDressingRoomButtons() {
 }
 
 function hideButtons() {
-    document.querySelectorAll('div[class="dressing-room-buttons"]')
-        .forEach(value => {
-            value.style.display = "none";
-        });
     document.querySelectorAll('div[class="dressing-room-loader"]')
         .forEach(value => {
             value.style.display = "block";
@@ -40,10 +36,6 @@ function hideButtons() {
 }
 
 function showButtons() {
-    window.top.document.querySelectorAll('div[class="dressing-room-buttons"]')
-        .forEach(value => {
-            value.style.display = "block";
-        });
     window.top.document.querySelectorAll('div[class="dressing-room-loader"]')
         .forEach(value => {
             value.style.display = "none";

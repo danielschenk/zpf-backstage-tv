@@ -18,10 +18,6 @@ button.dressing-room.selected {
     background-color: lightblue;
 }
 
-img.dressing-room-loader {
-    height: 30;
-}
-
 td {
     border-style: solid;
     border-color: #eeeeee;
@@ -35,4 +31,24 @@ tr.act-name {
 td.act-name {
     background-color: lightcyan;
     font-size: 50pt;
+}
+
+div.dressing-room-buttons {
+    z-index: 1;
+    position: relative;
+}
+
+div.dressing-room-loader {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: white;
+    z-index: 2;
+}
+
+img.dressing-room-loader {
+    height: 80;
+    margin: auto auto;
 }
