@@ -1,12 +1,16 @@
+body, p, button, td, th {
+    font-size: xx-large;
+}
+
 button.dressing-room {
-    min-height: 35px;
-    min-width: 35px;
-    padding: 5px 5px;
+    min-height: 2em;
+    min-width: 2em;
+    padding: 0.5em 0.5em;
     border-style: solid;
     border-color: grey;
     border-radius: 30%;
     border-width: 1px;
-    margin: 5px 10px;
+    margin: 0.25em 0.5em;
     background-color: #eeeeee;
 }
 

@@ -16,7 +16,14 @@
         <tbody>
         {% for key, act in acts.items() %}
             <tr>
-                <td>{{ act["name"] }}</td>
+                <td class="act-name">{{ act["name"] }}</td>
+                <td class="act-detail-header">Showtimes: </td>
+                {% for show in act["shows"] %}
+                    <td class="act-detail">{{ show["start"] }} - {{ show["end"] }}</td>
+                {% endfor %}
+            </tr>
+            <tr>
+                <td class="act-detail-header">Dressing room: </td>
                 <td>
                     <div class="dressing-room-buttons" style="display: none;">
                         {% for room in ["1", "2", "3", "4", "5", "6", "None"] %}
