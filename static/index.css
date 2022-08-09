@@ -1,8 +1,19 @@
 button.dressing-room {
     min-height: 35px;
     min-width: 35px;
+    padding: 5px 5px;
+    border-style: solid;
+    border-color: grey;
+    border-radius: 30%;
+    border-width: 1px;
+    margin: 5px 10px;
+    background-color: #eeeeee;
 }
 
 button.dressing-room.selected {
     background-color: lightblue;
+}
+
+img.dressing-room-loader {
+    height: 30;
 }

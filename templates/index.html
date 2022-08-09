@@ -1,5 +1,6 @@
 <head>
     <title>AmigoText backend</title>
+    <link rel="stylesheet" href="https://www.zomerparkfeest.nl/dist/css/styles.9613bcfb0df5bb8bcf8d.css" />
     <link rel="stylesheet" href="{{ url_for('static', filename='index.css') }}" />
 </head>
 <body onload="updateAllDressingRoomButtons()">
@@ -31,7 +32,7 @@
                     <div class="dressing-room-loader">
                         <img
                             src="{{ url_for('static', filename='icons8-dots-loading.gif') }}"
-                            height="30"
+                            class="dressing-room-loader"
                         />
                     </div>
                 </td>
