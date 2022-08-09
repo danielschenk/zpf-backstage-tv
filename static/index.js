@@ -8,11 +8,10 @@ function setDressingRoom(actKey, roomNumber) {
 
 function updateAllDressingRoomButtons() {
     hideButtons();
-    document.querySelectorAll('button[class="dressing-room"]')
+    document.querySelectorAll("button.dressing-room")
         .forEach(value => {
             value.classList.remove("selected");
             value.disabled = false;
-            console.log(value);
         });
 
     fetch("dressing_rooms")
