@@ -6,6 +6,7 @@ import socket
 import threading
 import pickle
 import os
+from typing import OrderedDict
 from flask import Flask, render_template, jsonify, make_response, request
 from apscheduler.schedulers.background import BackgroundScheduler
 
@@ -30,7 +31,19 @@ def get_resource(url, session):
 def serve_index():
     """Main page handler"""
     with programme_lock:
-        return render_template("index.html", acts=programme["acts"])
+        acts_by_day = OrderedDict()
+        # pre-add days to ensure correct order
+        for day in ("donderdag", "vrijdag", "zaterdag", "zondag"):
+            acts_by_day[day] = {}
+
+        for key, act in programme["acts"].items():
+            for show in act["shows"]:
+                day = show["day"]
+                if key not in acts_by_day[day]:
+                    assert day in acts_by_day
+                    acts_by_day[day][key] = act.copy()
+
+    return render_template("index.html", acts_by_day=acts_by_day)
 
 
 @app.route("/programme")

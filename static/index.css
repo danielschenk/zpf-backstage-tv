@@ -1,5 +1,5 @@
 body, p, button, td, th {
-    font-size: xx-large;
+    font-size: 32pt;
 }
 
 button.dressing-room {
@@ -10,8 +10,10 @@ button.dressing-room {
     border-color: grey;
     border-radius: 30%;
     border-width: 1px;
-    margin: 0.25em 0.5em;
+    margin: 0.25em 0.25em;
     background-color: #eeeeee;
+    font-size: 22pt;
+    font-weight: bolder;
 }
 
 button.dressing-room.selected {
@@ -22,6 +24,7 @@ td {
     border-style: solid;
     border-color: #eeeeee;
     border-width: 1px;
+    padding: 0.25em;
 }
 
 tr.act-name {
@@ -30,7 +33,19 @@ tr.act-name {
 
 td.act-name {
     background-color: lightcyan;
+    font-size: 40pt;
+}
+
+td.day {
+    background-color: cyan;
     font-size: 50pt;
+    padding: 0.25em 0em;
+}
+
+button.day {
+    font-size: 50pt;
+    border-style: none;
+    padding: 0em 0.5em;
 }
 
 div.dressing-room-buttons {
