@@ -36,6 +36,10 @@ td.act-name {
     font-size: 40pt;
 }
 
+tr.day-contents {
+    display: none;
+}
+
 td.day {
     background-color: cyan;
     font-size: 50pt;

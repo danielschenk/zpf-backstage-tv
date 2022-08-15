@@ -41,3 +41,27 @@ function showButtons() {
             value.style.display = "none";
         });
 }
+
+function showDay(day) {
+    document.querySelectorAll("tr.day-collapsed." + day)
+        .forEach(value => {
+            console.log(value);
+            value.style.display = "none";
+        });
+    document.querySelectorAll("tr.day-contents." + day)
+        .forEach(value => {
+            console.log(value);
+            value.style.display = "table-row";
+        });
+}
+
+function hideDay(day) {
+    document.querySelectorAll("tr.day-contents." + day)
+        .forEach(value => {
+            value.style.display = "none";
+        });
+    document.querySelectorAll("tr.day-collapsed." + day)
+        .forEach(value => {
+            value.style.display = "table-row";
+        });
+}

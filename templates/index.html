@@ -9,23 +9,23 @@
     <table id="data" class="table table-striped">
         <tbody>
         {% for day in acts_by_day %}
-            <tr class="day-collapsed-{{ day }}">
+            <tr class="day-collapsed {{ day }}">
                 <td colspan="2" class="day">
-                    <button class="day">[+]</button>
+                    <button class="day" onclick="showDay('{{ day }}')">[+]</button>
                     {{ day }}
                 </td>
             </tr>
-            <tr class="day-contents-{{ day }}">
+            <tr class="day-contents {{ day }}">
                 <td colspan="2" class="day">
-                    <button class="day">[−]</button>
+                    <button class="day" onclick="hideDay('{{ day }}')">[−]</button>
                     {{ day }}
                 </td>
             </tr>
             {% for key, act in acts_by_day[day].items() %}
-                <tr class="day-contents-{{ day }} act-name">
+                <tr class="day-contents {{ day }} act-name">
                     <td colspan="2" class="act-name">{{ act["name"] }}</td>
                 </tr>
-                <tr class="day-contents-{{ day }}">
+                <tr class="day-contents {{ day }}">
                     <td class="act-detail-header">Showtimes: </td>
                     <td class="act-detail">
                         <ul>
@@ -35,7 +35,7 @@
                         </ul>
                     </td>
                 </tr>
-                <tr class="day-contents-{{ day }}">
+                <tr class="day-contents {{ day }}">
                     <td class="act-detail-header">Dressing room: </td>
                     <td>
                         <div class="dressing-room-buttons">
