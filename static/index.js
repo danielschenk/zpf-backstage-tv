@@ -3,7 +3,18 @@ function setDressingRoom(actKey, roomNumber) {
     fetch("dressing_rooms/" + actKey, {
         "method": "PUT",
         "body": roomNumber
-    }).then(updateAllDressingRoomButtons);
+    }).then(response => {
+        if (response.ok) {
+            updateAllDressingRoomButtons();
+        } else {
+            handleSetDressingRoomError();
+        }
+    }, handleSetDressingRoomError);
+}
+
+function handleSetDressingRoomError() {
+    window.alert("Failed to update dressing room");
+    showButtons();
 }
 
 function updateAllDressingRoomButtons() {
