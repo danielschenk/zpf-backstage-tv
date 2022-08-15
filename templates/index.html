@@ -3,7 +3,7 @@
     <link rel="stylesheet" href="https://www.zomerparkfeest.nl/dist/css/styles.9613bcfb0df5bb8bcf8d.css" />
     <link rel="stylesheet" href="{{ url_for('static', filename='index.css') }}" />
 </head>
-<body onload="updateAllDressingRoomButtons()">
+<body onload="showCurrentDay(); updateAllDressingRoomButtons();">
     <h1>AmigoText Data Entry</h1>
     {% block content %}
     <table id="data" class="table table-striped">

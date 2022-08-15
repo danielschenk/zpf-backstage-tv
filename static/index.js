@@ -45,12 +45,10 @@ function showButtons() {
 function showDay(day) {
     document.querySelectorAll("tr.day-collapsed." + day)
         .forEach(value => {
-            console.log(value);
             value.style.display = "none";
         });
     document.querySelectorAll("tr.day-contents." + day)
         .forEach(value => {
-            console.log(value);
             value.style.display = "table-row";
         });
 }
@@ -64,4 +62,30 @@ function hideDay(day) {
         .forEach(value => {
             value.style.display = "table-row";
         });
+}
+
+function showCurrentDay() {
+    const d = new Date();
+    day = d.getDay();
+    hours = d.getHours();
+    if (hours < 6) {
+        // Same night is regarded same day
+        day--;
+        if (day == -1) {
+            day = 0;
+        }
+    }
+    console.log(day);
+
+    const dayToText = {
+        4: "donderdag",
+        5: "vrijdag",
+        6: "zaterdag",
+        7: "zondag"
+    };
+    if (day in dayToText) {
+        showDay(dayToText[day]);
+    } else {
+        showDay("donderdag");
+    }
 }
