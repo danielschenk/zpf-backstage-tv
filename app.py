@@ -90,6 +90,8 @@ def serve_dressing_room(act_key):
 def update_dressing_room(act_key):
     with rooms_lock:
         rooms[act_key] = request.data.decode("utf-8")
+        with app.open_instance_resource("rooms.pickle", "wb+") as f:
+            pickle.dump(rooms, f)
     return "success"
 
 
@@ -116,6 +118,13 @@ try:
 except FileNotFoundError:
     print("no programme cache on disk, need initial fetch")
     update_programme_cache()
+
+try:
+    with app.open_instance_resource("rooms.pickle", "rb") as f:
+        print("found persisted rooms on disk")
+        rooms = pickle.load(f)
+except FileNotFoundError:
+    print("no rooms on disk")
 
 
 scheduler = BackgroundScheduler()
