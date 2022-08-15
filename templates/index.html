@@ -9,51 +9,55 @@
     <table id="data" class="table table-striped">
         <tbody>
         {% for day in acts_by_day %}
-            <div class="day" id="{{ day }}">
-                <tr>
-                    <td colspan="2" class="day">
-                        <button class="day" id="button-{{ day }}">[-]</button>
-                        {{ day }}
+            <tr class="day-collapsed-{{ day }}">
+                <td colspan="2" class="day">
+                    <button class="day" id="button-{{ day }}">[+]</button>
+                    {{ day }}
+                </td>
+            </tr>
+            <tr class="day-contents-{{ day }}">
+                <td colspan="2" class="day">
+                    <button class="day" id="button-{{ day }}">[−]</button>
+                    {{ day }}
+                </td>
+            </tr>
+            {% for key, act in acts_by_day[day].items() %}
+                <tr class="day-contents-{{ day }} act-name">
+                    <td colspan="2" class="act-name">{{ act["name"] }}</td>
+                </tr>
+                <tr class="day-contents-{{ day }}">
+                    <td class="act-detail-header">Showtimes: </td>
+                    <td class="act-detail">
+                        <ul>
+                            {% for show in act["shows"] %}
+                                <li>{{ show["start"] }} - {{ show["end"] }}</li>
+                            {% endfor %}
+                        </ul>
                     </td>
                 </tr>
-                {% for key, act in acts_by_day[day].items() %}
-                    <tr class="act-name">
-                        <td colspan="2" class="act-name">{{ act["name"] }}</td>
-                    </tr>
-                    <tr>
-                        <td class="act-detail-header">Showtimes: </td>
-                        <td class="act-detail">
-                            <ul>
-                                {% for show in act["shows"] %}
-                                    <li>{{ show["start"] }} - {{ show["end"] }}</li>
-                                {% endfor %}
-                            </ul>
-                        </td>
-                    </tr>
-                    <tr>
-                        <td class="act-detail-header">Dressing room: </td>
-                        <td>
-                            <div class="dressing-room-buttons">
-                                {% for room in ["1", "2", "3", "4", "5", "6", "None"] %}
-                                    <button
-                                        onclick="setDressingRoom('{{ key }}', '{{ room }}')"
-                                        class="dressing-room"
-                                        id="{{ key }}-{{ room }}"
-                                    >
-                                        {{ room }}
-                                    </button>
-                                {% endfor %}
-                                <div class="dressing-room-loader">
-                                    <img
-                                        src="{{ url_for('static', filename='icons8-dots-loading.gif') }}"
-                                        class="dressing-room-loader"
-                                    />
-                                </div>
+                <tr class="day-contents-{{ day }}">
+                    <td class="act-detail-header">Dressing room: </td>
+                    <td>
+                        <div class="dressing-room-buttons">
+                            {% for room in ["1", "2", "3", "4", "5", "6", "None"] %}
+                                <button
+                                    onclick="setDressingRoom('{{ key }}', '{{ room }}')"
+                                    class="dressing-room"
+                                    id="{{ key }}-{{ room }}"
+                                >
+                                    {{ room }}
+                                </button>
+                            {% endfor %}
+                            <div class="dressing-room-loader">
+                                <img
+                                    src="{{ url_for('static', filename='icons8-dots-loading.gif') }}"
+                                    class="dressing-room-loader"
+                                />
                             </div>
-                        </td>
-                    </tr>
-                {% endfor %}
-            </div>
+                        </div>
+                    </td>
+                </tr>
+            {% endfor %}
         {% endfor %}
         </tbody>
     </table>
