@@ -75,7 +75,6 @@ function showCurrentDay() {
             day = 0;
         }
     }
-    console.log(day);
 
     const dayToText = {
         4: "donderdag",
@@ -88,4 +87,14 @@ function showCurrentDay() {
     } else {
         showDay("donderdag");
     }
+}
+
+function handleRefresh() {
+    updateAllDressingRoomButtons();
+    window.setTimeout(handleRefresh, 60000);
+}
+
+function onLoad() {
+    showCurrentDay();
+    handleRefresh();
 }
