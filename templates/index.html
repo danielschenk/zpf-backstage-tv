@@ -30,7 +30,9 @@
                     <td class="act-detail">
                         <ul>
                             {% for show in act["shows"] %}
-                                <li>{{ show["start"] }} - {{ show["end"] }}</li>
+                                <li class="showtime" start={{ show['start_utc'] }} end={{ show['end_utc'] }}>
+                                    {{ show["start"] }} - {{ show["end"] }}
+                                </li>
                             {% endfor %}
                         </ul>
                     </td>

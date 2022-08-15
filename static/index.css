@@ -54,6 +54,16 @@ td.day {
     padding: 0.25em 0em;
 }
 
+li.showtime.started {
+    font-weight: bold;
+    color: darkblue;
+}
+
+li.showtime.over {
+    text-decoration: line-through;
+    color: grey;
+}
+
 button.day {
     font-size: 50pt;
     border-style: none;

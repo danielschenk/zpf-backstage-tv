@@ -105,8 +105,30 @@ function showCurrentDay() {
     }
 }
 
+function updateShowtimeAnnotations() {
+    // use dummy time during festival for now to test styling
+    // utc = new Date().getTime() / 1000;
+    let utc = 1661546700;
+
+    document.querySelectorAll("li.showtime")
+        .forEach(value => {
+            value.classList.remove("started", "over", "almost-starting");
+            let start = parseInt(value.getAttribute("start"));
+            let end = parseInt(value.getAttribute("end"));
+
+            if (utc >= start && utc <= end) {
+                value.classList.add("started");
+            } else if (utc > end) {
+                value.classList.add("over");
+            } else if (start - utc <= (5 * 60)) {
+                value.classList.add("almost-starting");
+            }
+        });
+}
+
 function handleRefresh() {
     updateAllDressingRoomButtons();
+    updateShowtimeAnnotations();
     window.setTimeout(handleRefresh, 60000);
 }
 
