@@ -2,11 +2,10 @@
 
 """Flask app which serves as the backend for the Zomerparkfeest Amigo backstage TV"""
 
-import socket
 import threading
 import pickle
-import os
 from typing import OrderedDict
+from functools import cmp_to_key
 from flask import Flask, render_template, jsonify, make_response, request
 from apscheduler.schedulers.background import BackgroundScheduler
 
@@ -36,7 +35,32 @@ def serve_index():
         for day in ("donderdag", "vrijdag", "zaterdag", "zondag"):
             acts_by_day[day] = {}
 
-        for key, act in programme["acts"].items():
+        def compare_show_times(act1, act2):
+            """Compare show times, assuming next day at 06:00 instead of midnight"""
+            start1 = act1[1]["shows"][0]["start"]
+            start2 = act2[1]["shows"][0]["start"]
+
+            if start1 == start2:
+                return 0
+
+            next_festival_day = "06:00"
+            if start1 < start2:
+                if start1 < next_festival_day and start2 >= next_festival_day:
+                    # greater than (because one show is past midnight,
+                    # but still same evening)
+                    return 1
+                return -1
+            elif start1 > start2:
+                if start1 >= next_festival_day and start2 < next_festival_day:
+                    # lesser than (because one show is past midnight,
+                    # but still same evening)
+                    return -1
+                return 1
+
+        acts = OrderedDict(sorted(programme["acts"].items(),
+                                  key=cmp_to_key(compare_show_times)))
+
+        for key, act in acts.items():
             for show in act["shows"]:
                 day = show["day"]
                 if key not in acts_by_day[day]:
