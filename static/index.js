@@ -8,15 +8,18 @@ function setDressingRoom(actKey, roomNumber) {
 
 function updateAllDressingRoomButtons() {
     hideButtons();
-    document.querySelectorAll("button.dressing-room")
-        .forEach(value => {
-            value.classList.remove("selected");
-            value.disabled = false;
-        });
 
     fetch("dressing_rooms")
-        .then(response => response.json())
+        .then(response => response.json(), () => {
+            window.alert("Failed to fetch dressing rooms");
+            return Promise.reject(Error("Failed to fetch dressing rooms"));
+        })
         .then(data => {
+            document.querySelectorAll("button.dressing-room")
+                .forEach(value => {
+                    value.classList.remove("selected");
+                    value.disabled = false;
+                });
             for(key in data) {
                 let room = data[key];
                 let button = document.getElementById(key + "-" + room);
@@ -24,6 +27,8 @@ function updateAllDressingRoomButtons() {
                 button.disabled = true;
             }
 
+            showButtons();
+        }, () => {
             showButtons();
         });
 }
