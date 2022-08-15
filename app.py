@@ -6,7 +6,7 @@ import threading
 import pickle
 from typing import OrderedDict
 from functools import cmp_to_key
-from flask import Flask, render_template, jsonify, make_response, request
+from flask import Flask, render_template, jsonify, make_response, request, Response
 from apscheduler.schedulers.background import BackgroundScheduler
 
 import zpfwebsite
@@ -80,18 +80,19 @@ def serve_programme():
 @app.route("/dressing_rooms/<act_key>", methods=["GET"])
 def serve_dressing_room(act_key):
     with rooms_lock:
-        if act_key in rooms:
-            return str(rooms[act_key])
-        else:
-            return "None"
+        if act_key not in rooms:
+            return Response("Act does not exist", status=404)
+
+        return str(rooms[act_key])
 
 
 @app.route("/dressing_rooms/<act_key>", methods=["PUT"])
 def update_dressing_room(act_key):
     with rooms_lock:
+        if act_key not in rooms:
+            return Response("Act does not exist", status=404)
         rooms[act_key] = request.data.decode("utf-8")
-        with app.open_instance_resource("rooms.pickle", "wb+") as f:
-            pickle.dump(rooms, f)
+        persist_rooms(rooms)
     return "success"
 
 
@@ -110,6 +111,21 @@ def update_programme_cache():
     with app.open_instance_resource("programme_cache.pickle", "wb+") as f:
         pickle.dump(programme_temp, f)
 
+    initialize_nonexistent_act_rooms(programme_temp["acts"])
+
+
+def initialize_nonexistent_act_rooms(acts):
+    with rooms_lock:
+        for key in acts:
+            if key not in rooms:
+                rooms[key] = "None"
+        persist_rooms(rooms)
+
+
+def persist_rooms(rooms):
+    with app.open_instance_resource("rooms.pickle", "wb+") as f:
+        pickle.dump(rooms, f)
+
 
 try:
     with app.open_instance_resource("programme_cache.pickle", "rb") as f:
@@ -125,6 +141,8 @@ try:
         rooms = pickle.load(f)
 except FileNotFoundError:
     print("no rooms on disk")
+
+initialize_nonexistent_act_rooms(programme["acts"])
 
 
 scheduler = BackgroundScheduler()
