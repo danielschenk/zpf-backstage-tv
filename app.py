@@ -4,12 +4,21 @@
 
 import threading
 import pickle
-from typing import OrderedDict
+import datetime
+from typing import Mapping, OrderedDict
 from functools import cmp_to_key
 from flask import Flask, render_template, jsonify, make_response, request, Response
 from apscheduler.schedulers.background import BackgroundScheduler
 
 import zpfwebsite
+
+
+DAY_NUMBERS = {
+    "donderdag": 25,
+    "vrijdag": 26,
+    "zaterdag": 27,
+    "zondag": 28,
+}
 
 programme = {}
 programme_lock = threading.Lock()
@@ -73,6 +82,7 @@ def serve_index():
 @app.route("/programme")
 def serve_programme():
     with programme_lock:
+        add_show_timestamps(programme["acts"])
         response = make_response(jsonify(programme))
     return response
 
@@ -112,6 +122,27 @@ def update_programme_cache():
         pickle.dump(programme_temp, f)
 
     initialize_nonexistent_act_rooms(programme_temp["acts"])
+
+
+def add_show_timestamps(acts: Mapping):
+    for act in acts.values():
+        for show in act["shows"]:
+            day = DAY_NUMBERS[show["day"]]
+            if show["start"].startswith("0"):
+                # in programme, past-midnight shows show same day
+                # but in real time it is the next
+                day += 1
+            hour, minute = hour_minute(show["start"])
+            start = datetime.datetime(2022, 8, day, hour, minute)
+            hour, minute = hour_minute(show["end"])
+            end = datetime.datetime(2022, 8, day, hour, minute)
+
+            show["start_utc"] = int(start.timestamp())
+            show["end_utc"] = int(end.timestamp())
+
+
+def hour_minute(time: str):
+    return int(time[0:2]), int(time[3:5])
 
 
 def initialize_nonexistent_act_rooms(acts):
