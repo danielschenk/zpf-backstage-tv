@@ -108,20 +108,29 @@ function showCurrentDay() {
 function updateShowtimeAnnotations() {
     // use dummy time during festival for now to test styling
     // utc = new Date().getTime() / 1000;
-    let utc = 1661546700;
+    let utc = 1661546699;
 
     document.querySelectorAll("li.showtime")
         .forEach(value => {
             value.classList.remove("started", "over", "almost-starting");
+            Array.from(value.getElementsByClassName("showtime-annotation"))
+                .forEach(value => {
+                    value.classList.remove("visible");
+                });
+
             let start = parseInt(value.getAttribute("start"));
             let end = parseInt(value.getAttribute("end"));
 
             if (utc >= start && utc <= end) {
                 value.classList.add("started");
+                value.getElementsByClassName("started")[0].classList.add("visible");
             } else if (utc > end) {
                 value.classList.add("over");
             } else if (start - utc <= (5 * 60)) {
                 value.classList.add("almost-starting");
+                value.getElementsByClassName("almost-starting")[0].classList.add("visible");
+                let minutesLeft = Math.floor((start - utc) / 60);
+                value.getElementsByClassName("minutes-left-value")[0].textContent = minutesLeft;
             }
         });
 }

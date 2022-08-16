@@ -32,6 +32,10 @@
                             {% for show in act["shows"] %}
                                 <li class="showtime" start={{ show['start_utc'] }} end={{ show['end_utc'] }}>
                                     {{ show["start"] }} - {{ show["end"] }}
+                                    <div class="showtime-annotation started">🔊</div>
+                                    <div class="showtime-annotation almost-starting">
+                                        ⏱ <div class="minutes-left">Starts in <div class="minutes-left-value">?</div> min.</div>
+                                    </div>
                                 </li>
                             {% endfor %}
                         </ul>
