@@ -82,7 +82,6 @@ def serve_index():
 @app.route("/programme")
 def serve_programme():
     with programme_lock:
-        add_show_timestamps(programme["acts"])
         response = make_response(jsonify(programme))
     return response
 
@@ -115,6 +114,7 @@ def serve_dressing_rooms():
 def update_programme_cache():
     website = zpfwebsite.Website()
     programme_temp = website.get_programme(stage_list=["AMIGO"])
+    add_show_timestamps(programme_temp["acts"])
     with programme_lock:
         global programme
         programme = programme_temp.copy()
@@ -127,15 +127,17 @@ def update_programme_cache():
 def add_show_timestamps(acts: Mapping):
     for act in acts.values():
         for show in act["shows"]:
-            day = DAY_NUMBERS[show["day"]]
+            start_day = end_day = DAY_NUMBERS[show["day"]]
+            # in programme, past-midnight shows show same day
+            # but in real time it is the next
             if show["start"].startswith("0"):
-                # in programme, past-midnight shows show same day
-                # but in real time it is the next
-                day += 1
+                start_day += 1
+            if show["end"].startswith("0"):
+                end_day += 1
             hour, minute = hour_minute(show["start"])
-            start = datetime.datetime(2022, 8, day, hour, minute)
+            start = datetime.datetime(2022, 8, start_day, hour, minute)
             hour, minute = hour_minute(show["end"])
-            end = datetime.datetime(2022, 8, day, hour, minute)
+            end = datetime.datetime(2022, 8, end_day, hour, minute)
 
             show["start_utc"] = int(start.timestamp())
             show["end_utc"] = int(end.timestamp())
@@ -162,6 +164,7 @@ try:
     with app.open_instance_resource("programme_cache.pickle", "rb") as f:
         print("found programme cache on disk")
         programme = pickle.load(f)
+        add_show_timestamps(programme["acts"])
 except FileNotFoundError:
     print("no programme cache on disk, need initial fetch")
     update_programme_cache()
