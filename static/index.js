@@ -136,8 +136,8 @@ function updateShowtimeAnnotations() {
 }
 
 function handleRefresh() {
-    updateAllDressingRoomButtons();
     updateShowtimeAnnotations();
+    updateAllDressingRoomButtons();
     window.setTimeout(handleRefresh, 60000);
 }
 
