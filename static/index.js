@@ -106,8 +106,8 @@ function showCurrentDay() {
 }
 
 function updateShowtimeAnnotations() {
-    // let utc = new Date().getTime() / 1000;
-    let utc = 1661450138;
+    let utc = new Date().getTime() / 1000;
+    // let utc = 1661450138;
 
     document.querySelectorAll("li.showtime")
         .forEach(value => {
@@ -152,7 +152,24 @@ function handleRefresh() {
     window.setTimeout(handleRefresh, 60000);
 }
 
+function handleMirrorAnimation() {
+    document.querySelectorAll(".mirror-animated")
+        .forEach(value => {
+            value.classList.toggle("mirrored");
+        });
+    document.querySelectorAll(".speaker")
+        .forEach(value => {
+            if (value.textContent == "🔊") {
+                value.textContent = "🔈";
+            } else {
+                value.textContent = "🔊";
+            }
+        });
+    window.setTimeout(handleMirrorAnimation, 500);
+}
+
 function onLoad() {
     showCurrentDay();
     handleRefresh();
+    handleMirrorAnimation();
 }
