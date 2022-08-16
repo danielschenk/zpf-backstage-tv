@@ -78,11 +78,11 @@ div.showtime-annotation {
     display: none;
 }
 
-div.showtime-annotation.visible, div.minutes-left {
+div.showtime-annotation.visible, div.time-left {
     display: inline;
 }
 
-div.minutes-left {
+div.time-left {
     font-style: italic;
     color: red;
 }

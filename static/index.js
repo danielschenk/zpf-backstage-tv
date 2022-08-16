@@ -127,7 +127,7 @@ function updateShowtimeAnnotations() {
             let end = parseInt(value.getAttribute("end"));
 
             const warningSeconds = 5 * 60;
-            let minutesLeft = -1;
+            let secondsLeft = -1;
             if (utc >= start && utc <= end) {
                 value.classList.add("started");
                 value.getElementsByClassName("started")[0].classList.add("visible");
@@ -135,19 +135,23 @@ function updateShowtimeAnnotations() {
                 if (end - utc <= warningSeconds) {
                     value.classList.add("almost-ending");
                     value.getElementsByClassName("almost-ending")[0].classList.add("visible");
-                    minutesLeft = Math.floor((end - utc) / 60);
+                    secondsLeft = end - utc;
                 }
             } else if (utc > end) {
                 value.classList.add("over");
             } else if (start - utc <= warningSeconds) {
                 value.classList.add("almost-starting");
                 value.getElementsByClassName("almost-starting")[0].classList.add("visible");
-                minutesLeft = Math.floor((start - utc) / 60);
+                secondsLeft = start - utc;
             }
 
-            Array.from(value.getElementsByClassName("minutes-left-value"))
+            Array.from(value.getElementsByClassName("time-left-value"))
                 .forEach(value => {
-                    value.textContent = minutesLeft;
+                    if (secondsLeft > 60) {
+                        value.textContent = Math.floor(secondsLeft / 60) + " min.";
+                    } else {
+                        value.textContent = secondsLeft + " sec.";
+                    }
                 });
         });
 }
@@ -162,10 +166,14 @@ function resetUtc() {
     updateShowtimeAnnotations();
 }
 
-function handleRefresh() {
-    updateShowtimeAnnotations();
+function handleMinute() {
     updateAllDressingRoomButtons();
-    window.setTimeout(handleRefresh, 60000);
+    window.setTimeout(handleMinute, 60000);
+}
+
+function handleSecond() {
+    updateShowtimeAnnotations();
+    window.setTimeout(handleSecond, 1000);
 }
 
 function handleMirrorAnimation() {
@@ -186,6 +194,7 @@ function handleMirrorAnimation() {
 
 function onLoad() {
     showCurrentDay();
-    handleRefresh();
+    handleMinute();
+    handleSecond;
     handleMirrorAnimation();
 }
