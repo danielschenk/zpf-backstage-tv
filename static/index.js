@@ -106,9 +106,7 @@ function showCurrentDay() {
 }
 
 function updateShowtimeAnnotations() {
-    // use dummy time during festival for now to test styling
-    // utc = new Date().getTime() / 1000;
-    let utc = 1661546699;
+    let utc = new Date().getTime() / 1000;
 
     document.querySelectorAll("li.showtime")
         .forEach(value => {
