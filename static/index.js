@@ -105,9 +105,15 @@ function showCurrentDay() {
     }
 }
 
+let utcOverrideValue = -1;
+
 function updateShowtimeAnnotations() {
-    let utc = new Date().getTime() / 1000;
-    // let utc = 1661450138;
+    let utc;
+    if (utcOverrideValue > -1) {
+        utc = utcOverrideValue;
+    } else {
+        utc = new Date().getTime() / 1000;
+    }
 
     document.querySelectorAll("li.showtime")
         .forEach(value => {
@@ -144,6 +150,16 @@ function updateShowtimeAnnotations() {
                     value.textContent = minutesLeft;
                 });
         });
+}
+
+function overrideUtc() {
+    utcOverrideValue = parseInt(document.getElementById("utc").value);
+    updateShowtimeAnnotations();
+}
+
+function resetUtc() {
+    utcOverrideValue = 1;
+    updateShowtimeAnnotations();
 }
 
 function handleRefresh() {

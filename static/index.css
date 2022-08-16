@@ -6,7 +6,12 @@ h1 {
     font-size: 60pt;
 }
 
-button.dressing-room {
+
+h2 {
+    font-size: 50pt;
+}
+
+button {
     min-height: 2em;
     min-width: 2em;
     padding: 0.5em 0.5em;
@@ -20,8 +25,14 @@ button.dressing-room {
     font-weight: bolder;
 }
 
-button.dressing-room.selected {
+button.selected {
     background-color: lightblue;
+}
+
+input {
+    border-style: solid;
+    border-width: 1px;
+    border-color: grey;
 }
 
 td {
@@ -89,7 +100,13 @@ div.minutes-left {
 button.day {
     font-size: 50pt;
     border-style: none;
+    border-radius: 0%;
+    border-width: 0px;
+    background-color: transparent;
     padding: 0em 0.5em;
+    margin: 0;
+    min-height: auto;
+    min-width: none;
 }
 
 div.dressing-room-buttons {

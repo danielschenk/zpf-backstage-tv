@@ -5,7 +5,12 @@
 </head>
 <body onload="onLoad()">
     <h1>AmigoText Data Entry</h1>
-    {% block content %}
+    <div style="display: {{ dev_mode_display }}">
+        <h2>Developer tools</h2>
+        <input id="utc" placeholder="UTC">
+        <button onclick="overrideUtc()">Override UTC</button>
+        <button onclick="resetUtc()">Reset</button>
+    </div>
     <table id="data" class="table table-striped">
         <tbody>
         {% for day in acts_by_day %}
@@ -73,7 +78,6 @@
         {% endfor %}
         </tbody>
     </table>
-    {% endblock %}
 
     <script src="{{ url_for('static', filename="index.js") }}"></script>
 </body>
