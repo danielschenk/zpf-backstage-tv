@@ -67,7 +67,7 @@ div.showtime-annotation {
     display: none;
 }
 
-div.showtime-annotation.visible, div.minutes-left, div.minutes-left-value {
+div.showtime-annotation.visible, div.minutes-left {
     display: inline;
 }
 

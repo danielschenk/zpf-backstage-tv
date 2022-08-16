@@ -106,11 +106,12 @@ function showCurrentDay() {
 }
 
 function updateShowtimeAnnotations() {
-    let utc = new Date().getTime() / 1000;
+    // let utc = new Date().getTime() / 1000;
+    let utc = 1661450138;
 
     document.querySelectorAll("li.showtime")
         .forEach(value => {
-            value.classList.remove("started", "over", "almost-starting");
+            value.classList.remove("started", "over", "almost-starting", "almost-ending");
             Array.from(value.getElementsByClassName("showtime-annotation"))
                 .forEach(value => {
                     value.classList.remove("visible");
@@ -119,17 +120,29 @@ function updateShowtimeAnnotations() {
             let start = parseInt(value.getAttribute("start"));
             let end = parseInt(value.getAttribute("end"));
 
+            const warningSeconds = 5 * 60;
+            let minutesLeft = -1;
             if (utc >= start && utc <= end) {
                 value.classList.add("started");
                 value.getElementsByClassName("started")[0].classList.add("visible");
+
+                if (end - utc <= warningSeconds) {
+                    value.classList.add("almost-ending");
+                    value.getElementsByClassName("almost-ending")[0].classList.add("visible");
+                    minutesLeft = Math.floor((end - utc) / 60);
+                }
             } else if (utc > end) {
                 value.classList.add("over");
-            } else if (start - utc <= (5 * 60)) {
+            } else if (start - utc <= warningSeconds) {
                 value.classList.add("almost-starting");
                 value.getElementsByClassName("almost-starting")[0].classList.add("visible");
-                let minutesLeft = Math.floor((start - utc) / 60);
-                value.getElementsByClassName("minutes-left-value")[0].textContent = minutesLeft;
+                minutesLeft = Math.floor((start - utc) / 60);
             }
+
+            Array.from(value.getElementsByClassName("minutes-left-value"))
+                .forEach(value => {
+                    value.textContent = minutesLeft;
+                });
         });
 }
 
