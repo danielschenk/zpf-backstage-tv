@@ -6,6 +6,7 @@ COPY zpfwebsite /zpfwebsite
 COPY instance /instance
 COPY static /static
 COPY templates /templates
+COPY src /
 COPY app.py /
 ENV PYTHONUNBUFFERED 1
 

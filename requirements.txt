@@ -4,3 +4,6 @@ cachecontrol~=0.12.11
 lockfile~=0.12.2
 apscheduler~=3.9.1
 flask~=2.2.2
+Flask-Bootstrap~=3.3.7.1
+Flask-Login~=0.6.2
+Flask-WTF~=1.0.1

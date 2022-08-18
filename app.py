@@ -7,7 +7,12 @@ import pickle
 import datetime
 from typing import Mapping, OrderedDict
 from functools import cmp_to_key
+import os
+import flask
 from flask import Flask, render_template, jsonify, make_response, request, Response
+from flask_login import LoginManager, login_user, login_required
+from flask_bootstrap import Bootstrap
+from src import users
 from apscheduler.schedulers.background import BackgroundScheduler
 
 import zpfwebsite
@@ -27,6 +32,10 @@ rooms = {}
 rooms_lock = threading.Lock()
 
 app = Flask(__name__)
+app.config["SECRET_KEY"] = os.getenv("SECRET_KEY", os.urandom(64))
+login_manager = LoginManager()
+login_manager.init_app(app)
+Bootstrap(app)
 
 
 def get_resource(url, session):
@@ -36,6 +45,7 @@ def get_resource(url, session):
 
 
 @app.route("/")
+@login_required
 def serve_index():
     """Main page handler"""
     with programme_lock:
@@ -99,6 +109,7 @@ def serve_dressing_room(act_key):
 
 
 @app.route("/dressing_rooms/<act_key>", methods=["PUT"])
+@login_required
 def update_dressing_room(act_key):
     with rooms_lock:
         if act_key not in rooms:
@@ -112,6 +123,44 @@ def update_dressing_room(act_key):
 def serve_dressing_rooms():
     with rooms_lock:
         return jsonify(rooms)
+
+
+@login_manager.user_loader
+def load_user(user_id):
+    user = users.TheUser()
+    if user_id == user.get_id():
+        return user
+    return None
+
+
+@login_manager.unauthorized_handler
+def unauthorized():
+    return flask.redirect(flask.url_for("login"))
+
+
+@app.route("/login", methods=["GET", "POST"])
+def login():
+    form = users.LoginForm()
+    if form.validate_on_submit():
+        print(form.username, form.password)
+        user = users.TheUser()
+        if request.form["username"] == user.username and \
+                request.form["password"] == user.password:
+            login_user(user, remember=True)
+        else:
+            flask.flash("Login failed")
+            return flask.redirect(flask.url_for("login"))
+
+        flask.flash("Logged in successfully.")
+
+        next = flask.request.args.get("next")
+        # is_safe_url should check if the url is safe for redirects.
+        # See http://flask.pocoo.org/snippets/62/ for an example.
+        # if not is_safe_url(next):
+        #     return flask.abort(400)
+
+        return flask.redirect(next or flask.url_for("serve_index"))
+    return flask.render_template("login.html", form=form)
 
 
 def update_programme_cache():

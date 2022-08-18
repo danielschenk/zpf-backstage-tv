@@ -10,11 +10,13 @@
             "request": "launch",
             "module": "flask",
             "env": {
-                "FLASK_DEBUG": "1"
+                "FLASK_DEBUG": "1",
+                "USERNAME": "user",
+                "PASSWORD": "test"
             },
             "args": [
                 "run",
-                "--no-debugger",
+                "--debugger",
                 "--host",
                 "0.0.0.0"
             ],
