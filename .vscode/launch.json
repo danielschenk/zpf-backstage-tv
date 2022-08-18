@@ -11,6 +11,7 @@
             "module": "flask",
             "env": {
                 "FLASK_DEBUG": "1",
+                "SECRET_KEY": "810ee12f01b73bb93c50a60529d6d132153a649857132c6d6ec064618d4ca06d",
                 "USERNAME": "user",
                 "PASSWORD": "test"
             },

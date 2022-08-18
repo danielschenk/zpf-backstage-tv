@@ -32,7 +32,13 @@ rooms = {}
 rooms_lock = threading.Lock()
 
 app = Flask(__name__)
-app.config["SECRET_KEY"] = os.getenv("SECRET_KEY", os.urandom(64))
+
+_key = os.getenv("SECRET_KEY")
+if _key is None:
+    print("WARNING: SECRET_KEY not set, using random key every restart!")
+    _key = os.urandom(64)
+app.config["SECRET_KEY"] = _key
+
 login_manager = LoginManager()
 login_manager.init_app(app)
 Bootstrap(app)
