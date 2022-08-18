@@ -34,6 +34,10 @@ function updateAllDressingRoomButtons() {
             for(key in data) {
                 let room = data[key];
                 let button = document.getElementById(key + "-" + room);
+                if (button == null) {
+                    console.warn("button for act " + key + " was not found");
+                    continue;
+                }
                 button.classList.add("selected");
                 button.disabled = true;
             }
