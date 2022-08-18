@@ -148,7 +148,6 @@ def unauthorized():
 def login():
     form = users.LoginForm()
     if form.validate_on_submit():
-        print(form.username, form.password)
         user = users.TheUser()
         if request.form["username"] == user.username and \
                 request.form["password"] == user.password:

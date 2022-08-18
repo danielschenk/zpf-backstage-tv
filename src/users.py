@@ -20,7 +20,6 @@ class TheUser(UserMixin):
         super().__init__()
         self.username = os.getenv("USERNAME", "configure_username_please")
         self.password = os.getenv("PASSWORD", "configure_password_please")
-        print("TheUser: ", self.username, self.password)
 
     def get_id(self):
         return self.username
