@@ -8,6 +8,8 @@ COPY static /static
 COPY templates /templates
 COPY src /src
 COPY app.py /
+ARG VERSION=unknown
+RUN echo ${VERSION} > VERSION
 ENV PYTHONUNBUFFERED 1
 
 ENTRYPOINT ["flask", "run"]

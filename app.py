@@ -5,6 +5,8 @@
 import threading
 import pickle
 import datetime
+import subprocess
+import pathlib
 from typing import Mapping, OrderedDict
 from functools import cmp_to_key
 import os
@@ -48,6 +50,18 @@ def get_resource(url, session):
     contents = session.get(url).content
 
     return contents
+
+
+def get_version():
+    try:
+        with open(pathlib.Path(__file__).parent / "VERSION") as f:
+            return f.read()
+    except FileNotFoundError:
+        try:
+            cmd = "git describe --always --match 'v*' --dirty".split(" ")
+            return subprocess.check_output(cmd).strip().decode("utf-8")
+        except subprocess.CalledProcessError:
+            return "unknown"
 
 
 @app.route("/")
@@ -95,7 +109,8 @@ def serve_index():
     dev_mode_display = "block" if "devMode" in request.args else "none"
 
     return render_template("index.html", acts_by_day=acts_by_day,
-                           dev_mode_display=dev_mode_display)
+                           dev_mode_display=dev_mode_display,
+                           version=get_version())
 
 
 @app.route("/programme")
