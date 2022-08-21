@@ -5,25 +5,39 @@ function setDressingRoom(actKey, roomNumber) {
         "body": roomNumber
     }).then(response => {
         if (response.ok) {
-            updateAllDressingRoomButtons();
+            updateItineraryView();
         } else {
-            handleSetDressingRoomError();
+            handleSetItineraryItemError();
         }
-    }, handleSetDressingRoomError);
+    }, handleSetItineraryItemError);
 }
 
-function handleSetDressingRoomError() {
-    window.alert("Failed to update dressing room");
+function setItineraryItem(actKey, itemKey, inputId) {
+    hideButtons();
+    fetch("itinerary/" + actKey + "/" + itemKey, {
+        "method": "PUT",
+        "body": document.getElementById(inputId).value
+    }).then(response => {
+        if (response.ok) {
+            updateItineraryView();
+        } else {
+            handleSetItineraryItemError();
+        }
+    }, handleSetItineraryItemError);
+}
+
+function handleSetItineraryItemError() {
+    window.alert("Failed to save");
     showButtons();
 }
 
-function updateAllDressingRoomButtons() {
+function updateItineraryView() {
     hideButtons();
 
     fetch("itinerary")
         .then(response => response.json(), () => {
-            window.alert("Failed to fetch dressing rooms");
-            return Promise.reject(Error("Failed to fetch dressing rooms"));
+            window.alert("Failed to fetch itinerary");
+            return Promise.reject(Error("Failed to fetch itinerary"));
         })
         .then(data => {
             document.querySelectorAll("button.dressing-room")
@@ -172,7 +186,7 @@ function resetUtc() {
 }
 
 function handleMinute() {
-    updateAllDressingRoomButtons();
+    updateItineraryView();
     window.setTimeout(handleMinute, 60000);
 }
 
