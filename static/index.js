@@ -42,7 +42,6 @@ function updateItineraryView() {
         .then(data => {
             document.querySelectorAll("button.dressing-room")
                 .forEach(value => {
-                    console.log(value);
                     value.classList.remove("selected");
                     value.disabled = false;
                 });
@@ -127,7 +126,7 @@ function showCurrentDay() {
         4: "donderdag",
         5: "vrijdag",
         6: "zaterdag",
-        7: "zondag"
+        0: "zondag"
     };
     if (day in dayToText) {
         showDay(dayToText[day]);
