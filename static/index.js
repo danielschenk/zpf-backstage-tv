@@ -1,11 +1,11 @@
 function setDressingRoom(actKey, roomNumber) {
-    hideButtons();
+    hideButtons(actKey);
     fetch("itinerary/" + actKey + "/dressing_room", {
         "method": "PUT",
         "body": roomNumber
     }).then(response => {
         if (response.ok) {
-            updateItineraryView();
+            updateItineraryView(actKey);
         } else {
             handleSetItineraryItemError();
         }
@@ -13,13 +13,13 @@ function setDressingRoom(actKey, roomNumber) {
 }
 
 function setItineraryItem(actKey, itemKey, inputId) {
-    hideButtons();
+    hideButtons(actKey);
     fetch("itinerary/" + actKey + "/" + itemKey, {
         "method": "PUT",
         "body": document.getElementById(inputId).value
     }).then(response => {
         if (response.ok) {
-            updateItineraryView();
+            updateItineraryView(actKey);
         } else {
             handleSetItineraryItemError();
         }
@@ -31,59 +31,86 @@ function handleSetItineraryItemError() {
     showButtons();
 }
 
-function updateItineraryView() {
-    hideButtons();
+function updateItineraryView(actKey) {
+    hideButtons(actKey);
 
-    fetch("itinerary")
+    let url = "itinerary";
+    if (actKey != undefined) {
+        url += "/" + actKey;
+    }
+    fetch(url)
         .then(response => response.json(), () => {
             window.alert("Failed to fetch itinerary");
             return Promise.reject(Error("Failed to fetch itinerary"));
         })
         .then(data => {
-            document.querySelectorAll("button.dressing-room")
+            let selector = "button.dressing-room";
+            if (actKey != undefined) {
+                selector += ".act-" + actKey;
+            }
+            document.querySelectorAll(selector)
                 .forEach(value => {
                     value.classList.remove("selected");
                     value.disabled = false;
                 });
-            for(key in data) {
-                let room = data[key]["dressing_room"];
-                let button = document.getElementById(key + "-" + room);
-                if (button == null) {
-                    console.warn("button for act " + key + " was not found");
-                    continue;
-                }
-                button.classList.add("selected");
-                button.disabled = true;
-
-                for (itineraryKey in data[key]) {
-                    if (itineraryKey == "dressing_room") {
-                        continue;
-                    }
-                    let input = document.getElementById(key + "-" + itineraryKey);
-                    if (input == null) {
-                        console.warn(itineraryKey + " input for act " + key + " not found");
-                        continue;
-                    }
-                    input.value = data[key][itineraryKey];
+            if (actKey != undefined) {
+                updateItineraryViewElements(actKey, data);
+            } else {
+                for (key in data) {
+                    updateItineraryViewElements(key, data[key]);
                 }
             }
 
-            showButtons();
+            showButtons(actKey);
         }, () => {
-            showButtons();
+            showButtons(actKey);
         });
 }
 
-function hideButtons() {
-    document.querySelectorAll('div[class="dressing-room-loader"]')
+function updateItineraryViewElements(key, data) {
+    let room = data["dressing_room"];
+    let button = document.getElementById(key + "-" + room);
+    if (button != null) {
+        button.classList.add("selected");
+        button.disabled = true;
+    } else {
+        console.warn("button for act " + key + " was not found");
+    }
+
+    for (itineraryKey in data) {
+        if (itineraryKey == "dressing_room") {
+            continue;
+        }
+        let input = document.getElementById(key + "-" + itineraryKey);
+        if (input == null) {
+            console.warn(itineraryKey + " input for act " + key + " not found");
+        }
+        input.value = data[itineraryKey];
+    }
+}
+
+function hideButtons(actKey) {
+    let selector = "div.dressing-room-loader";
+    if (actKey != undefined) {
+        selector += ".act-" + actKey;
+    }
+    console.log("hiding " + selector);
+    document.querySelectorAll(selector)
         .forEach(value => {
+            console.log(value);
             value.style.display = "block";
         });
 }
 
-function showButtons() {
-    window.top.document.querySelectorAll('div[class="dressing-room-loader"]')
+function showButtons(actKey) {
+    let selector = "div.dressing-room-loader";
+    if (actKey != undefined) {
+        selector += ".act-" + actKey;
+    }
+    console.log("showing " + selector);
+    window.top.document.querySelectorAll(selector)
         .forEach(value => {
+            console.log(value);
             value.style.display = "none";
         });
 }

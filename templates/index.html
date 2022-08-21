@@ -59,13 +59,13 @@
                             {% for room in ["1", "2", "3", "4", "5", "6", "None"] %}
                                 <button
                                     onclick="setDressingRoom('{{ key }}', '{{ room }}')"
-                                    class="dressing-room"
+                                    class="dressing-room act-{{ key }}"
                                     id="{{ key }}-{{ room }}"
                                 >
                                     {{ room }}
                                 </button>
                             {% endfor %}
-                            <div class="dressing-room-loader">
+                            <div class="dressing-room-loader act-{{ key }}">
                                 <img
                                     src="{{ url_for('static', filename='icons8-dots-loading.gif') }}"
                                     class="dressing-room-loader"
@@ -80,7 +80,7 @@
                         <div class="dressing-room-buttons">
                             <input id="{{ key }}-soundcheck" type="time" placeholder="xx:xx">
                             <button onclick="setItineraryItem('{{key}}', 'soundcheck', '{{ key }}-soundcheck')">Save</button>
-                            <div class="dressing-room-loader">
+                            <div class="dressing-room-loader act-{{ key }}">
                                 <img
                                     src="{{ url_for('static', filename='icons8-dots-loading.gif') }}"
                                     class="dressing-room-loader"
@@ -95,7 +95,7 @@
                         <div class="dressing-room-buttons">
                             <input id="{{ key }}-linecheck" type="time" placeholder="xx:xx">
                             <button onclick="setItineraryItem('{{key}}', 'linecheck', '{{ key }}-linecheck')">Save</button>
-                            <div class="dressing-room-loader">
+                            <div class="dressing-room-loader act-{{ key }}">
                                 <img
                                     src="{{ url_for('static', filename='icons8-dots-loading.gif') }}"
                                     class="dressing-room-loader"
