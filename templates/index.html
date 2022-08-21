@@ -74,6 +74,20 @@
                         </div>
                     </td>
                 </tr>
+                <tr class="day-contents {{ day }}">
+                    <td class="act-detail-header">Soundcheck: </td>
+                    <td>
+                        <input id="{{ key }}-soundcheck" type="time" placeholder="xx:xx">
+                        <button onclick="setSoundcheck('{{key}}')">Save</button>
+                    </td>
+                </tr>
+                <tr class="day-contents {{ day }}">
+                    <td class="act-detail-header">Linecheck: </td>
+                    <td>
+                        <input id="{{ key }}-linecheck" type="time" placeholder="xx:xx">
+                        <button onclick="setLinecheck('{{key}}')">Save</button>
+                    </td>
+                </tr>
             {% endfor %}
         {% endfor %}
         </tbody>

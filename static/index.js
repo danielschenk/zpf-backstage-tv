@@ -1,6 +1,6 @@
 function setDressingRoom(actKey, roomNumber) {
     hideButtons();
-    fetch("dressing_rooms/" + actKey, {
+    fetch("itinerary/" + actKey + "/dressing_room", {
         "method": "PUT",
         "body": roomNumber
     }).then(response => {
@@ -20,7 +20,7 @@ function handleSetDressingRoomError() {
 function updateAllDressingRoomButtons() {
     hideButtons();
 
-    fetch("dressing_rooms")
+    fetch("itinerary")
         .then(response => response.json(), () => {
             window.alert("Failed to fetch dressing rooms");
             return Promise.reject(Error("Failed to fetch dressing rooms"));
@@ -28,11 +28,12 @@ function updateAllDressingRoomButtons() {
         .then(data => {
             document.querySelectorAll("button.dressing-room")
                 .forEach(value => {
+                    console.log(value);
                     value.classList.remove("selected");
                     value.disabled = false;
                 });
             for(key in data) {
-                let room = data[key];
+                let room = data[key]["dressing_room"];
                 let button = document.getElementById(key + "-" + room);
                 if (button == null) {
                     console.warn("button for act " + key + " was not found");

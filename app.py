@@ -28,8 +28,8 @@ DAY_NUMBERS = {
 programme = {}
 programme_lock = threading.Lock()
 
-rooms = {}
-rooms_lock = threading.Lock()
+itinerary = {}
+itinerary_lock = threading.Lock()
 
 app = Flask(__name__)
 
@@ -105,30 +105,30 @@ def serve_programme():
     return response
 
 
-@app.route("/dressing_rooms/<act_key>", methods=["GET"])
+@app.route("/itinerary/<act_key>", methods=["GET"])
 def serve_dressing_room(act_key):
-    with rooms_lock:
-        if act_key not in rooms:
+    with itinerary_lock:
+        if act_key not in itinerary:
             return Response("Act does not exist", status=404)
 
-        return str(rooms[act_key])
+        return jsonify(itinerary[act_key])
 
 
-@app.route("/dressing_rooms/<act_key>", methods=["PUT"])
+@app.route("/itinerary/<act_key>/<item>", methods=["PUT"])
 @login_required
-def update_dressing_room(act_key):
-    with rooms_lock:
-        if act_key not in rooms:
+def update_dressing_room(act_key, item):
+    with itinerary_lock:
+        if act_key not in itinerary:
             return Response("Act does not exist", status=404)
-        rooms[act_key] = request.data.decode("utf-8")
-        persist_rooms(rooms)
+        itinerary[act_key][item] = request.data.decode("utf-8")
+        persist_itinerary(itinerary)
     return "success"
 
 
-@app.route("/dressing_rooms")
+@app.route("/itinerary")
 def serve_dressing_rooms():
-    with rooms_lock:
-        return jsonify(rooms)
+    with itinerary_lock:
+        return jsonify(itinerary)
 
 
 @login_manager.user_loader
@@ -178,7 +178,7 @@ def update_programme_cache():
     with app.open_instance_resource("programme_cache.pickle", "wb+") as f:
         pickle.dump(programme_temp, f)
 
-    initialize_nonexistent_act_rooms(programme_temp["acts"])
+    initialize_nonexistent_act_itineraries(programme_temp["acts"])
 
 
 def add_show_timestamps(acts: Mapping):
@@ -204,17 +204,17 @@ def hour_minute(time: str):
     return int(time[0:2]), int(time[3:5])
 
 
-def initialize_nonexistent_act_rooms(acts):
-    with rooms_lock:
+def initialize_nonexistent_act_itineraries(acts):
+    with itinerary_lock:
         for key in acts:
-            if key not in rooms:
-                rooms[key] = "None"
-        persist_rooms(rooms)
+            if key not in itinerary:
+                itinerary[key] = {"dressing_room": "None"}
+        persist_itinerary(itinerary)
 
 
-def persist_rooms(rooms):
-    with app.open_instance_resource("rooms.pickle", "wb+") as f:
-        pickle.dump(rooms, f)
+def persist_itinerary(itinerary):
+    with app.open_instance_resource("itinerary.pickle", "wb+") as f:
+        pickle.dump(itinerary, f)
 
 
 try:
@@ -227,13 +227,13 @@ except FileNotFoundError:
     update_programme_cache()
 
 try:
-    with app.open_instance_resource("rooms.pickle", "rb") as f:
-        print("found persisted rooms on disk")
-        rooms = pickle.load(f)
+    with app.open_instance_resource("itinerary.pickle", "rb") as f:
+        print("found persisted itinerary on disk")
+        itinerary = pickle.load(f)
 except FileNotFoundError:
-    print("no rooms on disk")
+    print("no itinerary on disk")
 
-initialize_nonexistent_act_rooms(programme["acts"])
+initialize_nonexistent_act_itineraries(programme["acts"])
 
 
 scheduler = BackgroundScheduler()
