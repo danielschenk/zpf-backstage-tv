@@ -55,6 +55,18 @@ function updateItineraryView() {
                 }
                 button.classList.add("selected");
                 button.disabled = true;
+
+                for (itineraryKey in data[key]) {
+                    if (itineraryKey == "dressing_room") {
+                        continue;
+                    }
+                    let input = document.getElementById(key + "-" + itineraryKey);
+                    if (input == null) {
+                        console.warn(itineraryKey + " input for act " + key + " not found");
+                        continue;
+                    }
+                    input.value = data[key][itineraryKey];
+                }
             }
 
             showButtons();
