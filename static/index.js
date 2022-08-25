@@ -94,10 +94,8 @@ function hideButtons(actKey) {
     if (actKey != undefined) {
         selector += ".act-" + actKey;
     }
-    console.log("hiding " + selector);
     document.querySelectorAll(selector)
         .forEach(value => {
-            console.log(value);
             value.style.display = "block";
         });
 }
@@ -107,10 +105,9 @@ function showButtons(actKey) {
     if (actKey != undefined) {
         selector += ".act-" + actKey;
     }
-    console.log("showing " + selector);
+
     window.top.document.querySelectorAll(selector)
         .forEach(value => {
-            console.log(value);
             value.style.display = "none";
         });
 }
@@ -219,7 +216,7 @@ function overrideUtc() {
 }
 
 function resetUtc() {
-    utcOverrideValue = 1;
+    utcOverrideValue = -1;
     updateShowtimeAnnotations();
 }
 
@@ -252,6 +249,6 @@ function handleMirrorAnimation() {
 function onLoad() {
     showCurrentDay();
     handleMinute();
-    handleSecond;
+    handleSecond();
     handleMirrorAnimation();
 }
