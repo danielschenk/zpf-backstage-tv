@@ -11,7 +11,11 @@
         <button onclick="overrideUtc()">Override UTC</button>
         <button onclick="resetUtc()">Reset</button>
     </div>
-    <table id="data" class="table table-striped">
+    <span style="font-size: 40;">
+        Last programme fetch:
+        {{ fetch.year }}-{{ fetch.month }}-{{ fetch.day }} {{ fetch.hour }}:{{ fetch.minute }}
+    </span>
+    <table>
         <tbody>
         {% for day in acts_by_day %}
             <tr class="day-collapsed {{ day }}">

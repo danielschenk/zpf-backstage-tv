@@ -106,11 +106,13 @@ def serve_index():
                     assert day in acts_by_day
                     acts_by_day[day][key] = act.copy()
 
+        fetch_time = datetime.datetime.fromisoformat(programme["fetch_time"])
+
     dev_mode_display = "block" if "devMode" in request.args else "none"
 
     return render_template("index.html", acts_by_day=acts_by_day,
                            dev_mode_display=dev_mode_display,
-                           version=get_version())
+                           version=get_version(), fetch=fetch_time)
 
 
 @app.route("/programme")
