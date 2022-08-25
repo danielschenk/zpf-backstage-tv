@@ -46,12 +46,15 @@ jobs:
         username: ${{ secrets.DOCKERHUB_USERNAME }}
         password: ${{ secrets.DOCKERHUB_TOKEN }}
 
+    - name: Determine version string
+      run: echo "VERSION=$(git describe --always --match 'v*' --dirty)" >> $GITHUB_ENV
+
     - name: Build and push Docker images
       uses: docker/build-push-action@v2.4.0
       with:
         context: .
         build-args: |
-          VERSION=$(git describe --always --match 'v*' --dirty)
+          VERSION=${{ env.VERSION }}
         platforms: linux/386,linux/amd64,linux/arm64,linux/arm/v7
         push: ${{ github.event_name != 'pull_request' }}
         tags: ${{ steps.meta.outputs.tags }}
