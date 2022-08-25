@@ -12,6 +12,11 @@ function setDressingRoom(actKey, roomNumber) {
     }, handleSetItineraryItemError);
 }
 
+function setCustomDressingRoom(actKey) {
+    setDressingRoom(actKey,
+        document.getElementById(actKey + "-custom-room").value);
+}
+
 function setItineraryItem(actKey, itemKey, inputId) {
     hideButtons(actKey);
     fetch("itinerary/" + actKey + "/" + itemKey, {
@@ -51,7 +56,6 @@ function updateItineraryView(actKey) {
             document.querySelectorAll(selector)
                 .forEach(value => {
                     value.classList.remove("selected");
-                    value.disabled = false;
                 });
             if (actKey != undefined) {
                 updateItineraryViewElements(actKey, data);
@@ -70,11 +74,17 @@ function updateItineraryView(actKey) {
 function updateItineraryViewElements(key, data) {
     let room = data["dressing_room"];
     let button = document.getElementById(key + "-" + room);
+    if (button == null) {
+        input = document.getElementById(key + "-custom-room");
+        if (input != null) {
+            input.value = room;
+            button = document.getElementById(key + "-custom-room-button");
+        } else {
+            console.warn("room buttons for act " + key + " were not found");
+        }
+    }
     if (button != null) {
         button.classList.add("selected");
-        button.disabled = true;
-    } else {
-        console.warn("button for act " + key + " was not found");
     }
 
     for (itineraryKey in data) {

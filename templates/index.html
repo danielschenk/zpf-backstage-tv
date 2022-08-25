@@ -60,7 +60,7 @@
                     <td class="act-detail-header">Dressing room: </td>
                     <td>
                         <div class="dressing-room-buttons">
-                            {% for room in ["1", "2", "3", "4", "5", "6", "None"] %}
+                            {% for room in ["1", "2", "3", "4", "None"] %}
                                 <button
                                     onclick="setDressingRoom('{{ key }}', '{{ room }}')"
                                     class="dressing-room act-{{ key }}"
@@ -69,6 +69,15 @@
                                     {{ room }}
                                 </button>
                             {% endfor %}
+                            <input id="{{ key }}-custom-room" />
+                            <button
+                                onclick="setCustomDressingRoom('{{ key }}')"
+                                class="dressing-room act-{{ key }}"
+                                id="{{ key }}-custom-room-button"
+                                placeholder="custom"
+                            >
+                                Custom
+                            </button>
                             <div class="dressing-room-loader act-{{ key }}">
                                 <img
                                     src="{{ url_for('static', filename='icons8-dots-loading.gif') }}"
