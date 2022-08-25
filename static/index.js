@@ -176,7 +176,7 @@ function updateShowtimeAnnotations() {
     if (utcOverrideValue > -1) {
         utc = utcOverrideValue;
     } else {
-        utc = new Date().getTime() / 1000;
+        utc = Math.round(new Date().getTime() / 1000);
     }
 
     document.querySelectorAll("li.showtime")
