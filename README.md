@@ -1,8 +1,13 @@
 # AmigoText backend
+[![docker-image](https://github.com/danielschenk/zpf-backstage-tv/actions/workflows/docker-image.yml/badge.svg)](https://github.com/danielschenk/zpf-backstage-tv/actions/workflows/docker-image.yml)
+[![CodeQL](https://github.com/danielschenk/zpf-backstage-tv/actions/workflows/codeql-analysis.yml/badge.svg)](https://github.com/danielschenk/zpf-backstage-tv/actions/workflows/codeql-analysis.yml)
+
 This repository contains the code for a web backend which provides information to a
 little infotainment system in the backstage area of a yearly music festival, where I
 volunteer. I setup the system with a colleague and we do it just for fun (our actual role
 on the festival is being stagehands).
+
+**You can see a live demo [here](https://amigo-demo.danielschenk.nl) (username: `user`, password: `test`)**
 
 ![Backend example](doc/backend.png)
 
