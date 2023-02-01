@@ -1,4 +1,4 @@
-beautifulsoup4~=4.11.1
+beautifulsoup4~=4.11.2
 requests~=2.28.1
 cachecontrol~=0.12.11
 lockfile~=0.12.2
