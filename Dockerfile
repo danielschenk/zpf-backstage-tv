@@ -1,4 +1,4 @@
-FROM python:3.8.13
+FROM danielschenk/python-slim-iot:master
 COPY requirements.txt /
 RUN STATIC_DEPS=true pip install -r requirements.txt
 
