@@ -59,9 +59,8 @@ jobs:
         push: ${{ github.event_name != 'pull_request' }}
         tags: ${{ steps.meta.outputs.tags }}
         labels: ${{ steps.meta.outputs.labels }}
-        cache-from: type=registry,ref=${{ secrets.DOCKERHUB_USERNAME }}/zpf-backstage-tv:buildcache
-        cache-to: type=registry,ref=${{ secrets.DOCKERHUB_USERNAME }}/zpf-backstage-tv:buildcache,mode=max
-        no-cache: ${{ github.event_name == 'pull_request' }}
+        cache-from: type=registry,ref=danielschenk/zpf-backstage-tv:buildcache
+        cache-to: type=registry,ref=danielschenk/zpf-backstage-tv:buildcache,mode=max
 
     - name: Update repo description
       uses: peter-evans/dockerhub-description@v2
