@@ -50,7 +50,7 @@ jobs:
       run: echo "VERSION=$(git describe --always --match 'v*' --dirty)" >> $GITHUB_ENV
 
     - name: Build and push Docker images
-      uses: docker/build-push-action@v2.4.0
+      uses: docker/build-push-action@v3
       if: ${{ github.event_name != 'pull_request' }}
       with:
         context: .
@@ -64,7 +64,7 @@ jobs:
         cache-to: type=registry,ref=danielschenk/zpf-backstage-tv:buildcache,mode=max
 
     - name: Build and push Docker images (PR)
-      uses: docker/build-push-action@v2.4.0
+      uses: docker/build-push-action@v3
       if: ${{ github.event_name == 'pull_request' }}
       with:
         context: .
