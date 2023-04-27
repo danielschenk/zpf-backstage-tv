@@ -51,16 +51,30 @@ jobs:
 
     - name: Build and push Docker images
       uses: docker/build-push-action@v2.4.0
+      if: ${{ github.event_name != 'pull_request' }}
       with:
         context: .
         build-args: |
           VERSION=${{ env.VERSION }}
         platforms: linux/386,linux/amd64,linux/arm64,linux/arm/v7
-        push: ${{ github.event_name != 'pull_request' }}
+        push: true
         tags: ${{ steps.meta.outputs.tags }}
         labels: ${{ steps.meta.outputs.labels }}
         cache-from: type=registry,ref=danielschenk/zpf-backstage-tv:buildcache
         cache-to: type=registry,ref=danielschenk/zpf-backstage-tv:buildcache,mode=max
+
+    - name: Build and push Docker images (PR)
+      uses: docker/build-push-action@v2.4.0
+      if: ${{ github.event_name == 'pull_request' }}
+      with:
+        context: .
+        build-args: |
+          VERSION=${{ env.VERSION }}
+        platforms: linux/386,linux/amd64,linux/arm64,linux/arm/v7
+        push: false
+        tags: ${{ steps.meta.outputs.tags }}
+        labels: ${{ steps.meta.outputs.labels }}
+        cache-from: type=registry,ref=danielschenk/zpf-backstage-tv:buildcache
 
     - name: Update repo description
       uses: peter-evans/dockerhub-description@v2
