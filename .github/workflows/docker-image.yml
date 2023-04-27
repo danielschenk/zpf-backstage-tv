@@ -15,7 +15,7 @@ jobs:
     runs-on: ubuntu-latest
 
     env:
-      have_secrets: ${{ secrets.DUMMY != '' }}
+      have_secrets: ${{ secrets.DOCKERHUB_USERNAME != '' }}
 
     steps:
     - name: Checkout
