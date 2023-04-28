@@ -108,7 +108,11 @@ def serve_index():
                     assert day in acts_by_day
                     acts_by_day[day][key] = act.copy()
 
-        fetch_time = datetime.datetime.fromisoformat(programme["fetch_time"])
+        fetch_time = programme.get("fetch_time", None)
+        if fetch_time is not None:
+            fetch_time = datetime.datetime.fromisoformat(programme["fetch_time"])
+        else:
+            fetch_time = None
 
     dev_mode_display = "block" if "devMode" in request.args else "none"
 
@@ -243,7 +247,10 @@ try:
         add_show_timestamps(programme["acts"])
 except FileNotFoundError:
     print("no programme cache on disk, need initial fetch")
-    update_programme_cache()
+    if app.config["FETCH_PROGRAMME"]:
+        update_programme_cache()
+    else:
+        programme["acts"] = {}
 
 try:
     with app.open_instance_resource("itinerary.json", "r") as f:
@@ -254,7 +261,7 @@ except FileNotFoundError:
 
 initialize_nonexistent_act_itineraries(programme["acts"])
 
-
-scheduler = BackgroundScheduler()
-scheduler.add_job(update_programme_cache, "interval", minutes=15)
-scheduler.start()
+if app.config["FETCH_PROGRAMME"]:
+    scheduler = BackgroundScheduler()
+    scheduler.add_job(update_programme_cache, "interval", minutes=15)
+    scheduler.start()

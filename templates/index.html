@@ -13,8 +13,12 @@
     </div>
     <span style="font-size: 40;">
         Last programme fetch:
-        {{ fetch.year }}-{{ fetch.month }}-{{ fetch.day }}
-        {{ "%02u"|format(fetch.hour) }}:{{ "%02u"|format(fetch.minute) }}
+        {% if fetch != None %}
+            {{ fetch.year }}-{{ fetch.month }}-{{ fetch.day }}
+            {{ "%02u"|format(fetch.hour) }}:{{ "%02u"|format(fetch.minute) }}
+        {% else %}
+            never
+        {% endif %}
     </span>
     <table>
         <tbody>
