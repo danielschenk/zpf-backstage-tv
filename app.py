@@ -34,8 +34,10 @@ itinerary = {}
 itinerary_lock = threading.Lock()
 
 app = Flask(__name__)
+app.config.from_object("src.default_settings")
+app.config.from_envvar("ZPF_SETTINGS_FILE")
 
-_key = os.getenv("SECRET_KEY")
+_key = app.config["SECRET_KEY"]
 if _key is None:
     print("WARNING: SECRET_KEY not set, using random key every restart!")
     _key = os.urandom(64)
@@ -150,7 +152,7 @@ def serve_dressing_rooms():
 
 @login_manager.user_loader
 def load_user(user_id):
-    user = users.TheUser()
+    user = users.TheUser(app.config["USERNAME"], app.config["PASSWORD"])
     if user_id == user.get_id():
         return user
     return None
@@ -165,7 +167,7 @@ def unauthorized():
 def login():
     form = users.LoginForm()
     if form.validate_on_submit():
-        user = users.TheUser()
+        user = users.TheUser(app.config["USERNAME"], app.config["PASSWORD"])
         if request.form["username"] == user.username and \
                 request.form["password"] == user.password:
             login_user(user, remember=True)
