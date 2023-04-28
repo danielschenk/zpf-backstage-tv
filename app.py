@@ -3,7 +3,7 @@
 """Flask app which serves as the backend for the Zomerparkfeest Amigo backstage TV"""
 
 import threading
-import pickle
+import json
 import datetime
 import subprocess
 import pathlib
@@ -194,8 +194,8 @@ def update_programme_cache():
     with programme_lock:
         global programme
         programme = programme_temp.copy()
-    with app.open_instance_resource("programme_cache.pickle", "wb+") as f:
-        pickle.dump(programme_temp, f)
+    with app.open_instance_resource("programme_cache.json", "w+") as f:
+        json.dump(programme_temp, f, indent=2)
 
     initialize_nonexistent_act_itineraries(programme_temp["acts"])
 
@@ -232,23 +232,23 @@ def initialize_nonexistent_act_itineraries(acts):
 
 
 def persist_itinerary(itinerary):
-    with app.open_instance_resource("itinerary.pickle", "wb+") as f:
-        pickle.dump(itinerary, f)
+    with app.open_instance_resource("itinerary.json", "w+") as f:
+        json.dump(itinerary, f, indent=2)
 
 
 try:
-    with app.open_instance_resource("programme_cache.pickle", "rb") as f:
+    with app.open_instance_resource("programme_cache.json", "r") as f:
         print("found programme cache on disk")
-        programme = pickle.load(f)
+        programme = json.load(f)
         add_show_timestamps(programme["acts"])
 except FileNotFoundError:
     print("no programme cache on disk, need initial fetch")
     update_programme_cache()
 
 try:
-    with app.open_instance_resource("itinerary.pickle", "rb") as f:
+    with app.open_instance_resource("itinerary.json", "r") as f:
         print("found persisted itinerary on disk")
-        itinerary = pickle.load(f)
+        itinerary = json.load(f)
 except FileNotFoundError:
     print("no itinerary on disk")
 
