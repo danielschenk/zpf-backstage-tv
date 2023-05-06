@@ -1,6 +1,6 @@
 FROM danielschenk/python-slim-iot:master
 COPY requirements.txt /
-RUN STATIC_DEPS=true pip install -r requirements.txt
+RUN STATIC_DEPS=true pip install -r requirements.txt --no-cache-dir
 
 COPY zpfwebsite /zpfwebsite
 COPY instance /instance
