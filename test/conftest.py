@@ -2,6 +2,8 @@
 
 import multiprocessing
 import pathlib
+import tempfile
+import shutil
 
 import pytest
 import requests
@@ -53,10 +55,13 @@ def session(host, app):
 
 @pytest.fixture
 def app():
-    the_app = flask_app.create_app(instance_path=INSTANCE_DIR,
-                                   config_filename=INSTANCE_DIR / "settings.py")
-    process = multiprocessing.Process(target=the_app.run)
-    process.start()
-    yield
-    process.terminate()
-    process.join()
+    # copy instance data to a tempdir, so that we always start app with same state
+    with tempfile.TemporaryDirectory() as temp_instance:
+        shutil.copytree(INSTANCE_DIR, temp_instance, dirs_exist_ok=True)
+        the_app = flask_app.create_app(instance_path=temp_instance,
+                                       config_filename=TEST_DIR / "settings.py")
+        process = multiprocessing.Process(target=the_app.run)
+        process.start()
+        yield
+        process.terminate()
+        process.join()
