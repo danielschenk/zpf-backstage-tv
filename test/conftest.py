@@ -32,6 +32,15 @@ def host():
 
 @pytest.fixture
 def session(host, app):
+    return create_session(host)
+
+
+@pytest.fixture
+def session_virgin(host, app_virgin):
+    return create_session(host)
+
+
+def create_session(host):
     session = SessionWithBaseUrl(host)
 
     response = session.get("/login")
@@ -58,6 +67,18 @@ def app():
     # copy instance data to a tempdir, so that we always start app with same state
     with tempfile.TemporaryDirectory() as temp_instance:
         shutil.copytree(INSTANCE_DIR, temp_instance, dirs_exist_ok=True)
+        the_app = flask_app.create_app(instance_path=temp_instance,
+                                       config_filename=TEST_DIR / "settings.py")
+        process = multiprocessing.Process(target=the_app.run)
+        process.start()
+        yield
+        process.terminate()
+        process.join()
+
+
+@pytest.fixture
+def app_virgin():
+    with tempfile.TemporaryDirectory() as temp_instance:
         the_app = flask_app.create_app(instance_path=temp_instance,
                                        config_filename=TEST_DIR / "settings.py")
         process = multiprocessing.Process(target=the_app.run)

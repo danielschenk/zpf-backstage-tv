@@ -91,8 +91,9 @@ def create_app(instance_path=DEFAULT_INSTANCE_PATH,
         website = zpfwebsite.Website()
         programme_temp = website.get_programme(stage_list=["AMIGO"])
         add_show_timestamps(programme_temp["acts"])
+        global programme
+        global programme_lock
         with programme_lock:
-            global programme
             programme = programme_temp.copy()
         with app.open_instance_resource("programme_cache.json", "w+") as f:
             json.dump(programme_temp, f, indent=2)
@@ -100,18 +101,17 @@ def create_app(instance_path=DEFAULT_INSTANCE_PATH,
         initialize_nonexistent_act_itineraries(programme_temp["acts"])
 
     try:
+        global programme
         with app.open_instance_resource("programme_cache.json", "r") as f:
             print("found programme cache on disk")
             programme = json.load(f)
             add_show_timestamps(programme["acts"])
     except FileNotFoundError:
         print("no programme cache on disk, need initial fetch")
-        if app.config["FETCH_PROGRAMME"]:
-            update_programme_cache()
-        else:
-            programme["acts"] = {}
+        update_programme_cache()
 
     try:
+        global itinerary
         with app.open_instance_resource("itinerary.json", "r") as f:
             print("found persisted itinerary on disk")
             itinerary = json.load(f)
@@ -120,7 +120,7 @@ def create_app(instance_path=DEFAULT_INSTANCE_PATH,
 
     initialize_nonexistent_act_itineraries(programme["acts"])
 
-    if app.config["FETCH_PROGRAMME"]:
+    if app.config["UPDATE_PROGRAMME"]:
         scheduler.add_job(update_programme_cache, "interval", minutes=15)
         scheduler.start()
 
@@ -180,12 +180,16 @@ def create_app(instance_path=DEFAULT_INSTANCE_PATH,
 
     @app.route("/programme")
     def serve_programme():
+        global programme
+        global programme_lock
         with programme_lock:
             response = make_response(jsonify(programme))
         return response
 
     @app.route("/itinerary/<act_key>", methods=["GET"])
     def serve_dressing_room(act_key):
+        global itinerary
+        global itinerary_lock
         with itinerary_lock:
             if act_key not in itinerary:
                 return Response("Act does not exist", status=404)
@@ -195,6 +199,8 @@ def create_app(instance_path=DEFAULT_INSTANCE_PATH,
     @app.route("/itinerary/<act_key>/<item>", methods=["PUT"])
     @login_required
     def update_dressing_room(act_key, item):
+        global itinerary
+        global itinerary_lock
         with itinerary_lock:
             if act_key not in itinerary:
                 return Response("Act does not exist", status=404)
@@ -204,6 +210,8 @@ def create_app(instance_path=DEFAULT_INSTANCE_PATH,
 
     @app.route("/itinerary")
     def serve_dressing_rooms():
+        global itinerary
+        global itinerary_lock
         with itinerary_lock:
             return jsonify(itinerary)
 

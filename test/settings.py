@@ -1,3 +1,3 @@
 USERNAME = "test"
 PASSWORD = "test"
-FETCH_PROGRAMME = False
+UPDATE_PROGRAMME = False

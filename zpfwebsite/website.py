@@ -1,8 +1,6 @@
-import re
 import os
 import pathlib
 import hashlib
-import datetime
 from typing import Optional, List, Mapping
 import requests
 from cachecontrol import CacheControl
