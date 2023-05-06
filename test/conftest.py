@@ -1,10 +1,17 @@
 """Common fixtures"""
 
+import multiprocessing
+import pathlib
+
 import pytest
 import requests
 import urllib.parse
 import bs4
+import app as flask_app
 
+
+TEST_DIR = pathlib.Path(__file__).parent
+INSTANCE_DIR = TEST_DIR / "instance"
 
 class SessionWithBaseUrl(requests.Session):
     def __init__(self, base_url):
@@ -22,7 +29,7 @@ def host():
 
 
 @pytest.fixture
-def session(host):
+def session(host, app):
     session = SessionWithBaseUrl(host)
 
     response = session.get("/login")
@@ -39,8 +46,17 @@ def session(host):
         "Upgrade-Insecure-Requests": "1"
     }
     response = session.post("/login", data=data, headers=headers)
-    print(response)
-    print(response.history)
     assert response.history[0].headers["Location"] == "/"
 
     return session
+
+
+@pytest.fixture
+def app():
+    the_app = flask_app.create_app(instance_path=INSTANCE_DIR,
+                                   config_filename=INSTANCE_DIR / "settings.py")
+    process = multiprocessing.Process(target=the_app.run)
+    process.start()
+    yield
+    process.terminate()
+    process.join()
