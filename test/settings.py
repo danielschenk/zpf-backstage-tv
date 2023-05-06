@@ -1,0 +1,3 @@
+USERNAME = "test"
+PASSWORD = "test"
+FETCH_PROGRAMME = False
