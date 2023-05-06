@@ -1,5 +1,5 @@
 # AmigoText backend
-[![docker-image](https://github.com/danielschenk/zpf-backstage-tv/actions/workflows/docker-image.yml/badge.svg)](https://github.com/danielschenk/zpf-backstage-tv/actions/workflows/docker-image.yml)
+[![Build](https://github.com/danielschenk/zpf-backstage-tv/actions/workflows/build.yml/badge.svg)](https://github.com/danielschenk/zpf-backstage-tv/actions/workflows/build.yml)
 [![CodeQL](https://github.com/danielschenk/zpf-backstage-tv/actions/workflows/codeql-analysis.yml/badge.svg)](https://github.com/danielschenk/zpf-backstage-tv/actions/workflows/codeql-analysis.yml)
 
 This repository contains the code for a web backend which provides information to a
