@@ -25,10 +25,12 @@ jobs:
           requirements-dev.txt
     - run: pip install -r requirements-dev.txt
     - run: python3 -m pytest test/ --junitxml=test-report.xml
-    - uses: EnricoMi/publish-unit-test-result-action@v2
+    - name: Upload Test Results
       if: always()
+      uses: actions/upload-artifact@v3
       with:
-        files: |
+        name: Test Results
+        path: |
           test-report.xml
 
   docker:
@@ -106,3 +108,14 @@ jobs:
         username: ${{ secrets.DOCKERHUB_USERNAME }}
         password: ${{ secrets.DOCKERHUB_TOKEN }}
         repository: danielschenk/zpf-backstage-tv
+
+  # needed by test results workflow
+  event_file:
+    name: "Event File"
+    runs-on: ubuntu-latest
+    steps:
+    - name: Upload
+      uses: actions/upload-artifact@v3
+      with:
+        name: Event File
+        path: ${{ github.event_path }}
