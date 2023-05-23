@@ -1,5 +1,5 @@
 beautifulsoup4~=4.12.2
-requests~=2.30.0
+requests~=2.31.0
 cachecontrol~=0.12.11
 # required until cachecontrol compatible with urllib>=2 (https://github.com/ionrock/cachecontrol/pull/294)
 urllib3<2
