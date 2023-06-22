@@ -17,7 +17,7 @@ from flask_bootstrap import Bootstrap
 from src import users
 from apscheduler.schedulers.background import BackgroundScheduler
 
-import zpfwebsite
+import zpfwebsite.errors
 
 
 DAY_NUMBERS = {
@@ -30,7 +30,9 @@ DAY_NUMBERS = {
 APP_DIR = pathlib.Path(__file__).parent
 DEFAULT_INSTANCE_PATH = APP_DIR / "instance"
 
-programme = {}
+programme = {
+    "acts": {}
+}
 programme_lock = threading.Lock()
 
 itinerary = {}
@@ -108,7 +110,10 @@ def create_app(instance_path=DEFAULT_INSTANCE_PATH,
             add_show_timestamps(programme["acts"])
     except FileNotFoundError:
         print("no programme cache on disk, need initial fetch")
-        update_programme_cache()
+        try:
+            update_programme_cache()
+        except zpfwebsite.errors.ZpfWebsiteError as e:
+            print(f"error: {e}")
 
     try:
         global itinerary
