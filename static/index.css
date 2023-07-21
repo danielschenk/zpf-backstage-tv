@@ -1,5 +1,6 @@
 body, p, button, td, th {
     font-size: 32pt;
+    font-family: San Francisco, Roboto, Helvetica, Arial;
 }
 
 h1 {

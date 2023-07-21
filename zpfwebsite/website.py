@@ -15,8 +15,9 @@ from . import errors
 
 
 class Website:
-    ZPF_URL = "http://www.zomerparkfeest.nl"
+    ZPF_URL = "https://www.zomerparkfeest.nl"
     BLOCK_DIAGRAM_BASE_URL = ZPF_URL + "/programma/schema/"
+    PROGRAMME_SCHEMA_VERSION = "0.2"
     _BS4_FEATURES = "html.parser"
 
     def __init__(self, force_cache=False) -> None:
@@ -41,22 +42,47 @@ class Website:
     def get_programme(self, stage_list: Optional[List[str]] = None) -> Mapping[str, Mapping]:
         """Gets festival programme"""
 
-        day_urls = [
-            ('donderdag', 'donderdag-25-augustus'),
-            ('vrijdag', 'vrijdag-26-augustus'),
-            ('zaterdag', 'zaterdag-27-augustus'),
-            ('zondag', 'zondag-28-augustus'),
-        ]
-        programme = {"fetch_time": datetime.now().isoformat(), "acts": {}}
-        for day, url in day_urls:
+        days = self.get_programme_days()
+        weekdays = [day["weekday_name"] for day in days]
+        days_of_month = [day["day_of_month"] for day in days]
+        programme = {
+            "fetch_time": datetime.now().isoformat(),
+            "acts": {},
+            "schema_version": self.PROGRAMME_SCHEMA_VERSION,
+        }
+        for day, day_of_month, url in zip(weekdays, days_of_month,
+                                          self.get_programme_day_urls()):
             print(f'getting {day}...')
-            html = self.session.get(self.BLOCK_DIAGRAM_BASE_URL + url).content
-            self._parse_block_diagram(html, day, programme["acts"], stage_list)
+            html = self.session.get(url).content
+            self._parse_block_diagram(html, day, day_of_month, programme["acts"],
+                                      stage_list)
         print("done getting programme")
 
         return programme
 
-    def _parse_block_diagram(self, html, day, program: dict, stage_list=None):
+    def get_programme_days(self):
+        days = []
+        for url in self.get_programme_day_urls():
+            if url.endswith("/"):
+                url = url[:-1]
+            last_component = url.rsplit("/", maxsplit=1)[1]
+            parts = last_component.split("-")
+            days.append({
+                "weekday_name": parts[0],
+                "day_of_month": int(parts[1]),
+                "month_name": parts[2],
+            })
+        return days
+
+    def get_programme_day_urls(self):
+        html = self.session.get(self.BLOCK_DIAGRAM_BASE_URL).content
+        soup = bs4.BeautifulSoup(html, features=self._BS4_FEATURES)
+        urls = []
+        for link in soup.find_all("a", string=("DO", "VR", "ZA", "ZO")):
+            urls.append(link["href"])
+        return urls
+
+    def _parse_block_diagram(self, html, day, day_of_month, program: dict, stage_list=None):
         """Parses block diagram for single day and adds results to the given program
         dict"""
 
@@ -97,7 +123,13 @@ class Website:
                 info_text = act.find("span", class_="text-sm").text
                 time_text = info_text.splitlines()[1].strip().replace('"', '')
                 start, end = [t.strip() for t in time_text.split("-", maxsplit=1)]
-                entry["shows"].append({"day": day, "start": start, "end": end, "stage": stage_name})
+                entry["shows"].append({
+                    "day": day,
+                    "day_of_month": day_of_month,
+                    "start": start,
+                    "end": end,
+                    "stage": stage_name,
+                })
 
 
 # Modified example from cachecontrol documentation

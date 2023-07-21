@@ -21,13 +21,6 @@ from apscheduler.schedulers.background import BackgroundScheduler
 import zpfwebsite.errors
 
 
-DAY_NUMBERS = {
-    "donderdag": 25,
-    "vrijdag": 26,
-    "zaterdag": 27,
-    "zondag": 28,
-}
-
 APP_DIR = pathlib.Path(__file__).parent
 DEFAULT_INSTANCE_PATH = APP_DIR / "instance"
 
@@ -69,6 +62,10 @@ def is_safe_url(target):
     test_url = urlparse(urljoin(request.host_url, target))
     return test_url.scheme in ('http', 'https') and \
         ref_url.netloc == test_url.netloc
+
+
+class IncompatibleCacheError(RuntimeError):
+    pass
 
 
 def create_app(instance_path=DEFAULT_INSTANCE_PATH,
@@ -119,9 +116,15 @@ def create_app(instance_path=DEFAULT_INSTANCE_PATH,
         with app.open_instance_resource("programme_cache.json", "r") as f:
             print("found programme cache on disk")
             programme = json.load(f)
+            try:
+                major, minor = programme["schema_version"].split(".")
+                if major == 0 and minor < 2:
+                    raise IncompatibleCacheError()
+            except KeyError:
+                raise IncompatibleCacheError()
             add_show_timestamps(programme["acts"])
-    except FileNotFoundError:
-        print("no programme cache on disk, need initial fetch")
+    except (FileNotFoundError, IncompatibleCacheError):
+        print("no programme cache on disk or incompatible, need initial fetch")
         try:
             update_programme_cache()
         except zpfwebsite.errors.ZpfWebsiteError as e:
@@ -174,7 +177,7 @@ def create_app(instance_path=DEFAULT_INSTANCE_PATH,
                     return 1
 
             acts = OrderedDict(sorted(programme["acts"].items(),
-                                    key=cmp_to_key(compare_show_times)))
+                               key=cmp_to_key(compare_show_times)))
 
             for key, act in acts.items():
                 for show in act["shows"]:
@@ -272,9 +275,10 @@ def hour_minute(time: str):
 
 
 def add_show_timestamps(acts: Mapping):
+    year = datetime.datetime.now().year
     for act in acts.values():
         for show in act["shows"]:
-            start_day = end_day = DAY_NUMBERS[show["day"]]
+            start_day = end_day = show["day_of_month"]
             # in programme, past-midnight shows show same day
             # but in real time it is the next
             if show["start"].startswith("0"):
@@ -282,9 +286,9 @@ def add_show_timestamps(acts: Mapping):
             if show["end"].startswith("0"):
                 end_day += 1
             hour, minute = hour_minute(show["start"])
-            start = datetime.datetime(2022, 8, start_day, hour, minute)
+            start = datetime.datetime(year, 8, start_day, hour, minute)
             hour, minute = hour_minute(show["end"])
-            end = datetime.datetime(2022, 8, end_day, hour, minute)
+            end = datetime.datetime(year, 8, end_day, hour, minute)
 
             show["start_utc"] = int(start.timestamp())
             show["end_utc"] = int(end.timestamp())
