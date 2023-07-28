@@ -1,6 +1,7 @@
 body {
     font-size: 32pt;
-    font-family: system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji"
+    font-family: system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji";
+    background-color: #FAFAFA;
 }
 
 h1 {
@@ -22,15 +23,20 @@ button {
     border-radius: 10px;
     border-width: 1px;
     margin: 0.25em 0.25em;
-    background-color: #eeeeee;
+    background-color: #ffffff;
     font-family: inherit;
     font-size: 22pt;
     font-weight: bolder;
-    color: inherit;
+    color: #46749C;
+}
+
+button.day {
+    color: #ffffff;
 }
 
 button.selected {
-    background-color: lightblue;
+    color: #FDC02F;
+    font-weight: 900;
 }
 
 input {
@@ -68,7 +74,7 @@ tr.act-name {
 }
 
 td.act-name {
-    background-color: lightcyan;
+    background-color: #E4F5FD;
     font-size: 40pt;
 }
 
@@ -77,7 +83,8 @@ tr.day-contents {
 }
 
 td.day {
-    background-color: cyan;
+    color: #ffffff;
+    background-color: #1EAAF1;
     font-size: 50pt;
     padding: 0.25em 0em;
 }
