@@ -9,7 +9,7 @@ on the festival is being stagehands).
 
 **You can see a live demo [here](https://amigo-demo.danielschenk.nl) (username: `user`, password: `test`)**
 
-<img src="doc/backend.png" alt="Backend example" width="300"/>
+<img src="doc/backend.png" alt="Backend example" width="400"/>
 
 ## Background and use
 Every year I volunteer as a stagehand at the AMIGO stage of the Zomerparkfeest festival
