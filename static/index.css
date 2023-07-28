@@ -93,6 +93,7 @@ td.day {
 
 li.showtime.started {
     color: var(--color-active);
+    font-weight: 800;
 }
 
 li.showtime.over {
@@ -109,6 +110,7 @@ div.showtime-annotation.visible, div.time-left {
 }
 
 div.time-left {
+    font-weight: normal;
     font-style: italic;
     color: red;
 }
