@@ -1,14 +1,15 @@
-body, p, button, td, th {
+body {
     font-size: 32pt;
-    font-family: San Francisco, Roboto, Helvetica, Arial;
+    font-family: system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji"
 }
 
 h1 {
+    font-family: inherit;
     font-size: 60pt;
 }
 
-
 h2 {
+    font-family: inherit;
     font-size: 50pt;
 }
 
@@ -18,12 +19,14 @@ button {
     padding: 0.5em 0.5em;
     border-style: solid;
     border-color: grey;
-    border-radius: 30%;
+    border-radius: 10px;
     border-width: 1px;
     margin: 0.25em 0.25em;
     background-color: #eeeeee;
+    font-family: inherit;
     font-size: 22pt;
     font-weight: bolder;
+    color: inherit;
 }
 
 button.selected {
@@ -31,18 +34,29 @@ button.selected {
 }
 
 input {
+    font-family: inherit;
+    font-size: 22pt;
+    color: inherit;
     border-style: solid;
     border-width: 1px;
     border-color: grey;
-    width: 200px;
-    min-height: 1.2em;
+    border-radius: 10px;
+    width: 10em;
+    min-height: 2em;
 }
 
 td {
+    font-family: inherit;
+    font-size: 40;
     border-style: solid;
     border-color: #eeeeee;
     border-width: 1px;
     padding: 0.25em;
+}
+
+ul {
+    font: inherit;
+    list-style-type: none;
 }
 
 table {
