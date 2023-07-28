@@ -1,3 +1,7 @@
+:root {
+    --color-active: #FDC02F;
+}
+
 body {
     font-size: 32pt;
     font-family: system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji";
@@ -35,7 +39,7 @@ button.day {
 }
 
 button.selected {
-    color: #FDC02F;
+    color: var(--color-active);
     font-weight: 900;
 }
 
@@ -54,9 +58,7 @@ input {
 td {
     font-family: inherit;
     font-size: 40;
-    border-style: solid;
-    border-color: #eeeeee;
-    border-width: 1px;
+    border-style: none;
     padding: 0.25em;
 }
 
@@ -90,7 +92,7 @@ td.day {
 }
 
 li.showtime.started {
-    color: darkblue;
+    color: var(--color-active);
 }
 
 li.showtime.over {
@@ -151,4 +153,37 @@ div.dressing-room-loader {
 img.dressing-room-loader {
     height: 80;
     margin: auto auto;
+}
+
+@media (prefers-color-scheme: dark) {
+    body {
+        color: #E1E1E1;
+        background-color: #111111;
+    }
+
+    td.day {
+        background-color: #111E24;
+    }
+
+    td.act-name {
+        background-color: #1C2D36;
+    }
+
+    button {
+        background-color: #1C1C1C;
+    }
+
+    input {
+        color: inherit;
+        background-color: #1C1C1C;
+    }
+
+    div.dressing-room-loader {
+        background-color: #111111;
+    }
+
+    img.dressing-room-loader {
+        -webkit-filter: invert(1);
+        filter: invert(1);
+    }
 }
