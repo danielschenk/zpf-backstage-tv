@@ -5,6 +5,6 @@
         "test"
     ],
     "files.associations": {
-        "**/static/index.html": "c_cpp"
+        "*.html": "jinja-html"
     }
 }
