@@ -19,21 +19,19 @@
             never
         {% endif %}
     </span>
+    <div class="day-navigation">
+        {% for day in acts_by_day %}
+        <button
+            class="day"
+            onclick="showDay('{{ day }}'); {% for other_day in acts_by_day if other_day != day %} hideDay('{{ other_day }}'); {% endfor %}"
+        >
+            {{ day[:2]|upper }}
+        </button>
+        {% endfor %}
+    </div>
     <table>
         <tbody>
         {% for day in acts_by_day %}
-            <tr class="day-collapsed {{ day }}">
-                <td colspan="2" class="day">
-                    <button class="day" onclick="showDay('{{ day }}')">[+]</button>
-                    {{ day }}
-                </td>
-            </tr>
-            <tr class="day-contents {{ day }}">
-                <td colspan="2" class="day">
-                    <button class="day" onclick="hideDay('{{ day }}')">[−]</button>
-                    {{ day }}
-                </td>
-            </tr>
             {% for key, act in acts_by_day[day].items() %}
                 <tr class="day-contents {{ day }} act-name">
                     <td colspan="2" class="act-name">{{ act["name"] }}</td>
