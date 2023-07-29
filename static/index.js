@@ -17,11 +17,11 @@ function setCustomDressingRoom(actKey) {
         document.getElementById(actKey + "-custom-room").value);
 }
 
-function setItineraryItem(actKey, itemKey, inputId) {
+function setItineraryItem(actKey, itemKey) {
     hideButtons(actKey);
     fetch("itinerary/" + actKey + "/" + itemKey, {
         "method": "PUT",
-        "body": document.getElementById(inputId).value
+        "body": document.getElementById(`${actKey}-${itemKey}`).value
     }).then(response => {
         if (response.ok) {
             updateItineraryView(actKey);
@@ -87,16 +87,15 @@ function updateItineraryViewElements(key, data) {
         button.classList.add("selected");
     }
 
-    for (itineraryKey in data) {
-        if (itineraryKey == "dressing_room") {
-            continue;
-        }
-        let input = document.getElementById(key + "-" + itineraryKey);
-        if (input == null) {
-            console.warn(itineraryKey + " input for act " + key + " not found");
-        }
-        input.value = data[itineraryKey];
-    }
+    document.querySelectorAll(`input.free-field[data-act="${key}"]`)
+        .forEach(input => {
+            let key = input.dataset.field;
+            if (key in data) {
+                input.value = data[key];
+            } else {
+                input.value = '';
+            }
+        });
 }
 
 function hideButtons(actKey) {

@@ -10,6 +10,7 @@ import pathlib
 from typing import Mapping, OrderedDict
 from functools import cmp_to_key
 import os
+from dataclasses import dataclass
 from urllib.parse import urlparse, urljoin
 import flask
 from flask import Flask, render_template, jsonify, make_response, request, Response
@@ -66,6 +67,13 @@ def is_safe_url(target):
 
 class IncompatibleCacheError(RuntimeError):
     pass
+
+
+@dataclass
+class ItineraryField:
+    key: str
+    display_name: str
+    type: str = "text"
 
 
 def create_app(instance_path=DEFAULT_INSTANCE_PATH,
@@ -194,9 +202,15 @@ def create_app(instance_path=DEFAULT_INSTANCE_PATH,
 
         dev_mode_display = "block" if "devMode" in request.args else "none"
 
+        free_fields = [
+            ItineraryField("get_in", "Get-in", "time"),
+            ItineraryField("soundcheck", "Soundcheck", "time"),
+            ItineraryField("linecheck", "Linecheck", "time"),
+        ]
         return render_template("index.html", acts_by_day=acts_by_day,
                                dev_mode_display=dev_mode_display,
-                               version=get_version(), fetch=fetch_time)
+                               version=get_version(), fetch=fetch_time,
+                               free_fields=free_fields)
 
     @app.route("/programme")
     def serve_programme():

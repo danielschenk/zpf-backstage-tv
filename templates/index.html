@@ -91,12 +91,13 @@
                         </div>
                     </td>
                 </tr>
+                {% for field in free_fields %}
                 <tr class="day-contents {{ day }}">
-                    <td class="act-detail-header">Soundcheck: </td>
+                    <td class="act-detail-header">{{ field.display_name }}: </td>
                     <td>
                         <div class="dressing-room-buttons">
-                            <input id="{{ key }}-soundcheck" type="time" placeholder="xx:xx">
-                            <button onclick="setItineraryItem('{{key}}', 'soundcheck', '{{ key }}-soundcheck')">Save</button>
+                            <input class="free-field" id="{{ key }}-{{ field.key }}" data-act="{{ key }}" data-field="{{ field.key }}" type="{{ field.type }}">
+                            <button onclick="setItineraryItem('{{key}}', '{{ field.key }}')">Save</button>
                             <div class="dressing-room-loader act-{{ key }}">
                                 <img
                                     src="{{ url_for('static', filename='icons8-dots-loading.gif') }}"
@@ -106,21 +107,7 @@
                         </div>
                     </td>
                 </tr>
-                <tr class="day-contents {{ day }}">
-                    <td class="act-detail-header">Linecheck: </td>
-                    <td>
-                        <div class="dressing-room-buttons">
-                            <input id="{{ key }}-linecheck" type="time" placeholder="xx:xx">
-                            <button onclick="setItineraryItem('{{key}}', 'linecheck', '{{ key }}-linecheck')">Save</button>
-                            <div class="dressing-room-loader act-{{ key }}">
-                                <img
-                                    src="{{ url_for('static', filename='icons8-dots-loading.gif') }}"
-                                    class="dressing-room-loader"
-                                />
-                            </div>
-                        </div>
-                    </td>
-                </tr>
+                {% endfor %}
             {% endfor %}
         {% endfor %}
         </tbody>
