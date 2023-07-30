@@ -76,10 +76,6 @@ td.act-name {
     font-size: 40pt;
 }
 
-tr.day-contents {
-    display: none;
-}
-
 td.day {
     color: #ffffff;
     background-color: #1EAAF1;
@@ -139,6 +135,14 @@ button.navigation {
     min-width: none;
     padding-top: 20px;
     padding-bottom: 20px;
+}
+
+div.pane {
+    display: none;
+}
+
+div.pane.selected {
+    display: block;
 }
 
 button.navigation.selected {

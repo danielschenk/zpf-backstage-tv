@@ -121,20 +121,13 @@ function showButtons(actKey) {
         });
 }
 
-function showDay(day) {
-    document.querySelectorAll("tr.day-contents")
-        .forEach(value => {
-            value.style.display = "none";
-        });
-    document.querySelectorAll("tr.day-contents." + day)
-        .forEach(value => {
-            value.style.display = "table-row";
-        });
-    document.querySelectorAll("button.navigation")
+function showPane(pane) {
+    document.querySelectorAll("div.pane, button.navigation")
         .forEach(value => {
             value.classList.remove("selected");
         });
-    document.getElementById("nav-btn-" + day).classList.add("selected");
+    document.getElementById("nav-btn-" + pane).classList.add("selected");
+    document.getElementById("pane-" + pane).classList.add("selected");
 }
 
 function showCurrentDay() {
@@ -156,9 +149,9 @@ function showCurrentDay() {
         0: "zondag"
     };
     if (day in dayToText) {
-        showDay(dayToText[day]);
+        showPane(dayToText[day]);
     } else {
-        showDay("donderdag");
+        showPane("donderdag");
     }
 }
 

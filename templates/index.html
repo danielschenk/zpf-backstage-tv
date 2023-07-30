@@ -20,18 +20,19 @@
         {% endif %}
     </span>
     <div class="navigation">
-        {% for day in acts_by_day %}
-        <button class="navigation" id="nav-btn-{{ day }}" onclick="showDay('{{ day }}');">{{ day[:2]|upper }}</button>
-        {% endfor %}
+    {% for day in acts_by_day %}
+        <button class="navigation" id="nav-btn-{{ day }}" onclick="showPane('{{ day }}');">{{ day[:2]|upper }}</button>
+    {% endfor %}
     </div>
-    <table>
-        <tbody>
-        {% for day in acts_by_day %}
+    {% for day in acts_by_day %}
+    <div class="pane" id="pane-{{ day }}">
+        <table>
+            <tbody>
             {% for key, act in acts_by_day[day].items() %}
-                <tr class="day-contents {{ day }} act-name">
+                <tr class="act-name">
                     <td colspan="2" class="act-name">{{ act["name"] }}</td>
                 </tr>
-                <tr class="day-contents {{ day }}">
+                <tr>
                     <td class="act-detail-header">Showtimes: </td>
                     <td class="act-detail">
                         <ul>
@@ -53,7 +54,7 @@
                         </ul>
                     </td>
                 </tr>
-                <tr class="day-contents {{ day }}">
+                <tr>
                     <td class="act-detail-header">Dressing room: </td>
                     <td>
                         <div class="dressing-room-buttons">
@@ -85,7 +86,7 @@
                     </td>
                 </tr>
                 {% for field in free_fields %}
-                <tr class="day-contents {{ day }}">
+                <tr>
                     <td class="act-detail-header">{{ field.display_name }}: </td>
                     <td>
                         <div class="dressing-room-buttons">
@@ -100,11 +101,12 @@
                         </div>
                     </td>
                 </tr>
-                {% endfor %}
             {% endfor %}
-        {% endfor %}
-        </tbody>
-    </table>
+            {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% endfor %}
     Version: {{ version }}<br />
     Loading icon by <a href="https://icons8.com">icons8</a>.
 
