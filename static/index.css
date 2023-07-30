@@ -34,11 +34,7 @@ button {
     color: #46749C;
 }
 
-button.day {
-    color: #ffffff;
-}
-
-button.selected {
+button.data-entry.selected {
     color: var(--color-active);
     font-weight: 900;
 }
@@ -125,8 +121,14 @@ div.time-left {
     filter: FlipH;                 /* IE 6/7/8 */
 }
 
-button.day {
-    font-size: 50pt;
+div.navigation {
+    background-color: #1EAAF1;
+    width: 100%;
+}
+
+button.navigation {
+    color: #D2EEFC;
+    font-size: 40pt;
     border-style: none;
     border-radius: 0%;
     border-width: 0px;
@@ -135,6 +137,12 @@ button.day {
     margin: 0;
     min-height: auto;
     min-width: none;
+    padding-top: 20px;
+    padding-bottom: 20px;
+}
+
+button.navigation.selected {
+    color: #ffffff;
 }
 
 div.dressing-room-buttons {

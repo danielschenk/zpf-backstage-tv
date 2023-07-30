@@ -122,7 +122,7 @@ function showButtons(actKey) {
 }
 
 function showDay(day) {
-    document.querySelectorAll("tr.day-collapsed." + day)
+    document.querySelectorAll("tr.day-contents")
         .forEach(value => {
             value.style.display = "none";
         });
@@ -130,17 +130,11 @@ function showDay(day) {
         .forEach(value => {
             value.style.display = "table-row";
         });
-}
-
-function hideDay(day) {
-    document.querySelectorAll("tr.day-contents." + day)
+    document.querySelectorAll("button.navigation")
         .forEach(value => {
-            value.style.display = "none";
+            value.classList.remove("selected");
         });
-    document.querySelectorAll("tr.day-collapsed." + day)
-        .forEach(value => {
-            value.style.display = "table-row";
-        });
+    document.getElementById("nav-btn-" + day).classList.add("selected");
 }
 
 function showCurrentDay() {
