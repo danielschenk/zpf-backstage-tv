@@ -126,18 +126,15 @@ function showDay(day) {
         .forEach(value => {
             value.style.display = "none";
         });
+        document.querySelectorAll("tr.day-contents." + day)
+        .forEach(value => {
+            value.style.display = "table-row";
+        });
     document.querySelectorAll("button.navigation")
         .forEach(value => {
             value.classList.remove("selected");
         });
-    document.querySelectorAll("tr.day-contents." + day)
-        .forEach(value => {
-            value.style.display = "table-row";
-        });
-    document.querySelectorAll(`button.navigation[data-pane="${day}"]`)
-        .forEach(value => {
-            value.classList.add("selected");
-        });
+    document.getElementById("nav-btn-" + day).classList.add("selected");
 }
 
 function showCurrentDay() {

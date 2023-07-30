@@ -21,7 +21,7 @@
     </span>
     <div class="navigation">
         {% for day in acts_by_day %}
-        <button class="navigation" onclick="showDay('{{ day }}');" data-pane="{{ day }}">{{ day[:2]|upper }}</button>
+        <button class="navigation" id="nav-btn-{{ day }}" onclick="showDay('{{ day }}');">{{ day[:2]|upper }}</button>
         {% endfor %}
     </div>
     <table>
