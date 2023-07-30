@@ -120,6 +120,7 @@ div.time-left {
 div.navigation {
     background-color: #1EAAF1;
     width: 100%;
+    display: flex;
 }
 
 button.navigation {
@@ -135,6 +136,18 @@ button.navigation {
     min-width: none;
     padding-top: 20px;
     padding-bottom: 20px;
+}
+
+.filler-item {
+    flex-grow: 1;
+}
+
+.material-symbols-outlined {
+    font-variation-settings:
+        'FILL' 1,
+        'wght' 400,
+        'GRAD' 0,
+        'opsz' 48;
 }
 
 div.pane {

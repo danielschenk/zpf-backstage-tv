@@ -1,28 +1,26 @@
 <head>
     <title>AmigoText backend</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='index.css') }}" />
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" />
 </head>
 <body onload="onLoad()">
-    <h1>AmigoText Data Entry</h1>
     <div style="display: {{ dev_mode_display }}">
         <h2>Developer tools</h2>
         <input id="utc" placeholder="UTC" style="width: 400px;">
         <button onclick="overrideUtc()">Override UTC</button>
         <button onclick="resetUtc()">Reset</button>
     </div>
-    <span style="font-size: 40;">
-        Last programme fetch:
-        {% if fetch != None %}
-            {{ fetch.year }}-{{ fetch.month }}-{{ fetch.day }}
-            {{ "%02u"|format(fetch.hour) }}:{{ "%02u"|format(fetch.minute) }}
-        {% else %}
-            never
-        {% endif %}
-    </span>
     <div class="navigation">
     {% for day in acts_by_day %}
         <button class="navigation" id="nav-btn-{{ day }}" onclick="showPane('{{ day }}');">{{ day[:2]|upper }}</button>
     {% endfor %}
+        <div class="filler-item"></div>
+        <button class="navigation material-icon" id="nav-btn-info" onclick="showPane('info');">
+            <!-- TODO: properly set icon size -->
+            <span class="material-symbols-outlined" style="font-size: 55;">
+                info
+            </span>
+        </button>
     </div>
     {% for day in acts_by_day %}
     <div class="pane" id="pane-{{ day }}">
@@ -107,8 +105,20 @@
         </table>
     </div>
     {% endfor %}
-    Version: {{ version }}<br />
-    Loading icon by <a href="https://icons8.com">icons8</a>.
+    <div class="pane" id="pane-info">
+        <span style="font-size: 40;">
+            AmigoText Data Entry, version {{ version }}<br /><br />
+            Last programme fetch:
+            {% if fetch != None %}
+            {{ fetch.year }}-{{ fetch.month }}-{{ fetch.day }}
+            {{ "%02u"|format(fetch.hour) }}:{{ "%02u"|format(fetch.minute) }}
+            {% else %}
+            never
+            {% endif %}
+            <br />
+            Loading icon by <a href="https://icons8.com">icons8</a>.
+        </span>
+    </div>
 
     <script src="{{ url_for('static', filename="index.js") }}"></script>
 </body>
