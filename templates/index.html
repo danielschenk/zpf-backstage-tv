@@ -10,18 +10,13 @@
         <button onclick="overrideUtc()">Override UTC</button>
         <button onclick="resetUtc()">Reset</button>
     </div>
-    <div class="navigation">
+    <ul class="navigation">
     {% for day in acts_by_day %}
-        <button class="navigation" id="nav-btn-{{ day }}" onclick="showPane('{{ day }}');">{{ day[:2]|upper }}</button>
+        <li><a href="#{{ day }}">{{ day[:2]|upper }}</a></li>
     {% endfor %}
-        <div class="filler-item"></div>
-        <button class="navigation material-icon" id="nav-btn-info" onclick="showPane('info');">
-            <!-- TODO: properly set icon size -->
-            <span class="material-symbols-outlined" style="font-size: 55;">
-                info
-            </span>
-        </button>
-    </div>
+        <li class="filler-item"></li>
+        <li><a href="#info" class="material-symbols-outlined">info</a></li>
+    </ul>
     {% for day in acts_by_day %}
     <div class="pane" id="pane-{{ day }}">
         <table>

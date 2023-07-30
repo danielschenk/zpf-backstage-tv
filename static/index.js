@@ -122,11 +122,12 @@ function showButtons(actKey) {
 }
 
 function showPane(pane) {
-    document.querySelectorAll("div.pane, button.navigation")
+    window.location = "#" + pane;
+    document.querySelectorAll("div.pane")
         .forEach(value => {
             value.classList.remove("selected");
         });
-    document.getElementById("nav-btn-" + pane).classList.add("selected");
+    document.querySelector(`ul.navigation li a[href="#${pane}"]`).classList.add("selected");
     document.getElementById("pane-" + pane).classList.add("selected");
 }
 
@@ -243,6 +244,13 @@ function handleMirrorAnimation() {
 }
 
 function onLoad() {
+    document.querySelectorAll("ul.navigation li a")
+        .forEach(value => {
+            value.addEventListener("click", e => {
+                const href = e.target.getAttribute("href");
+                showPane(href.substring(1));
+            });
+        })
     showCurrentDay();
     handleMinute();
     handleSecond();
