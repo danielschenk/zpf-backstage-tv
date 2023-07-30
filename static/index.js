@@ -122,24 +122,21 @@ function showButtons(actKey) {
 }
 
 function showDay(day) {
-    document.querySelectorAll("tr.day-collapsed." + day)
+    document.querySelectorAll("tr.day-contents")
         .forEach(value => {
             value.style.display = "none";
+        });
+    document.querySelectorAll("button.navigation")
+        .forEach(value => {
+            value.classList.remove("selected");
         });
     document.querySelectorAll("tr.day-contents." + day)
         .forEach(value => {
             value.style.display = "table-row";
         });
-}
-
-function hideDay(day) {
-    document.querySelectorAll("tr.day-contents." + day)
+    document.querySelectorAll(`button.navigation[data-pane="${day}"]`)
         .forEach(value => {
-            value.style.display = "none";
-        });
-    document.querySelectorAll("tr.day-collapsed." + day)
-        .forEach(value => {
-            value.style.display = "table-row";
+            value.classList.add("selected");
         });
 }
 

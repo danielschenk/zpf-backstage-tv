@@ -19,14 +19,9 @@
             never
         {% endif %}
     </span>
-    <div class="day-navigation">
+    <div class="navigation">
         {% for day in acts_by_day %}
-        <button
-            class="day"
-            onclick="showDay('{{ day }}'); {% for other_day in acts_by_day if other_day != day %} hideDay('{{ other_day }}'); {% endfor %}"
-        >
-            {{ day[:2]|upper }}
-        </button>
+        <button class="navigation" onclick="showDay('{{ day }}');" data-pane="{{ day }}">{{ day[:2]|upper }}</button>
         {% endfor %}
     </div>
     <table>
@@ -65,7 +60,7 @@
                             {% for room in ["1", "2", "3", "4", "5", "6", "None"] %}
                                 <button
                                     onclick="setDressingRoom('{{ key }}', '{{ room }}')"
-                                    class="dressing-room act-{{ key }}"
+                                    class="data-entry dressing-room act-{{ key }}"
                                     id="{{ key }}-{{ room }}"
                                 >
                                     {{ room }}
@@ -74,7 +69,7 @@
                             <input id="{{ key }}-custom-room" />
                             <button
                                 onclick="setCustomDressingRoom('{{ key }}')"
-                                class="dressing-room act-{{ key }}"
+                                class="data-entry dressing-room act-{{ key }}"
                                 id="{{ key }}-custom-room-button"
                                 placeholder="custom"
                             >
@@ -95,7 +90,7 @@
                     <td>
                         <div class="dressing-room-buttons">
                             <input class="free-field" id="{{ key }}-{{ field.key }}" data-act="{{ key }}" data-field="{{ field.key }}" type="{{ field.type }}">
-                            <button onclick="setItineraryItem('{{key}}', '{{ field.key }}')">Save</button>
+                            <button class="data-entry" onclick="setItineraryItem('{{key}}', '{{ field.key }}')">Save</button>
                             <div class="dressing-room-loader act-{{ key }}">
                                 <img
                                     src="{{ url_for('static', filename='icons8-dots-loading.gif') }}"
