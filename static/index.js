@@ -126,7 +126,7 @@ function showDay(day) {
         .forEach(value => {
             value.style.display = "none";
         });
-        document.querySelectorAll("tr.day-contents." + day)
+    document.querySelectorAll("tr.day-contents." + day)
         .forEach(value => {
             value.style.display = "table-row";
         });
