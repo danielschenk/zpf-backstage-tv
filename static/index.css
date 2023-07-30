@@ -138,6 +138,10 @@ button.navigation {
     padding-bottom: 20px;
 }
 
+button.navigation:hover {
+    cursor: pointer;
+}
+
 .filler-item {
     flex-grow: 1;
 }
