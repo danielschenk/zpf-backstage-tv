@@ -128,11 +128,12 @@ function showPane(pane) {
         return;
     }
 
-    document.querySelectorAll("div.pane")
+    document.querySelectorAll("div.pane, ul.navigation li a, .nav-indicator")
         .forEach(value => {
             value.classList.remove("selected");
         });
     document.querySelector(`ul.navigation li a[href="#${pane}"]`).classList.add("selected");
+    document.getElementById("nav-indicator-#" + pane).classList.add("selected");
     div.classList.add("selected");
 }
 

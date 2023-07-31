@@ -127,6 +127,7 @@ ul.navigation {
 ul.navigation li {
     list-style-type: none;
     padding: 25px 30px;
+    position: relative;
 }
 
 ul.navigation li, ul.navigation li a {
@@ -136,8 +137,22 @@ ul.navigation li, ul.navigation li a {
     text-decoration: none;
 }
 
-ul.navigation li a:active {
+ul.navigation li a.selected {
     color: #ffffff;
+}
+
+div.nav-indicator {
+    display: none;
+    position: absolute;
+    width: 100%;
+    height: 5px;
+    bottom: 0px;
+    left: 0px;
+    background-color: #ffffff;
+}
+
+div.nav-indicator.selected {
+    display: block;
 }
 
 .filler-item {
@@ -193,12 +208,12 @@ img.dressing-room-loader {
         background-color: #111111;
     }
 
-    td.day {
+    ul.navigation {
         background-color: #111E24;
     }
 
     td.act-name {
-        background-color: #1C2D36;
+        background-color: #1C1C1C;
     }
 
     button {

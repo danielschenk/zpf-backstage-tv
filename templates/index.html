@@ -1,3 +1,10 @@
+{% macro nav_button(text, target, a_classes) %}
+        <li>
+            <a href="{{ target }}" class="{{ a_classes }}">{{ text }}</a>
+            <div class="nav-indicator" id="nav-indicator-{{ target }}"></div>
+        </li>
+{% endmacro %}
+
 <head>
     <title>AmigoText backend</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='index.css') }}" />
@@ -12,10 +19,10 @@
     </div>
     <ul class="navigation">
     {% for day in acts_by_day %}
-        <li><a href="#{{ day }}">{{ day[:2]|upper }}</a></li>
+    {{ nav_button(day[:2]|upper, "#" + day) }}
     {% endfor %}
         <li class="filler-item"></li>
-        <li><a href="#info" class="material-symbols-outlined">info</a></li>
+    {{ nav_button("info", "#info", "material-symbols-outlined") }}
     </ul>
     {% for day in acts_by_day %}
     <div class="pane" id="pane-{{ day }}">
@@ -94,12 +101,13 @@
                         </div>
                     </td>
                 </tr>
-            {% endfor %}
+                {% endfor %}
             {% endfor %}
             </tbody>
         </table>
     </div>
     {% endfor %}
+
     <div class="pane" id="pane-info">
         <span style="font-size: 40;">
             AmigoText Data Entry, version {{ version }}<br /><br />
