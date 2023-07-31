@@ -121,20 +121,20 @@ function showButtons(actKey) {
         });
 }
 
-function showDay(day) {
-    document.querySelectorAll("tr.day-contents")
-        .forEach(value => {
-            value.style.display = "none";
-        });
-    document.querySelectorAll("tr.day-contents." + day)
-        .forEach(value => {
-            value.style.display = "table-row";
-        });
-    document.querySelectorAll("button.navigation")
+function showPane(pane) {
+    let div = document.getElementById("pane-" + pane);
+    if (div == null) {
+        console.warn(`no pane named ${pane}`);
+        return;
+    }
+
+    document.querySelectorAll("div.pane, ul.navigation li a, .nav-indicator")
         .forEach(value => {
             value.classList.remove("selected");
         });
-    document.getElementById("nav-btn-" + day).classList.add("selected");
+    document.querySelector(`ul.navigation li a[href="#${pane}"]`).classList.add("selected");
+    document.getElementById("nav-indicator-#" + pane).classList.add("selected");
+    div.classList.add("selected");
 }
 
 function showCurrentDay() {
@@ -156,9 +156,9 @@ function showCurrentDay() {
         0: "zondag"
     };
     if (day in dayToText) {
-        showDay(dayToText[day]);
+        showPane(dayToText[day]);
     } else {
-        showDay("donderdag");
+        showPane("donderdag");
     }
 }
 
@@ -250,6 +250,13 @@ function handleMirrorAnimation() {
 }
 
 function onLoad() {
+    addEventListener("hashchange", event => {
+        let pos = event.newURL.search("#");
+        if (pos > 0) {
+            showPane(event.newURL.substring(pos + 1));
+        }
+    });
+
     showCurrentDay();
     handleMinute();
     handleSecond();

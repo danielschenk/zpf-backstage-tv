@@ -1,37 +1,38 @@
+{% macro nav_button(text, target, a_classes) %}
+        <li>
+            <a href="{{ target }}" class="{{ a_classes }}">{{ text }}</a>
+            <div class="nav-indicator" id="nav-indicator-{{ target }}"></div>
+        </li>
+{% endmacro %}
+
 <head>
     <title>AmigoText backend</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='index.css') }}" />
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" />
 </head>
 <body onload="onLoad()">
-    <h1>AmigoText Data Entry</h1>
     <div style="display: {{ dev_mode_display }}">
         <h2>Developer tools</h2>
         <input id="utc" placeholder="UTC" style="width: 400px;">
         <button onclick="overrideUtc()">Override UTC</button>
         <button onclick="resetUtc()">Reset</button>
     </div>
-    <span style="font-size: 40;">
-        Last programme fetch:
-        {% if fetch != None %}
-            {{ fetch.year }}-{{ fetch.month }}-{{ fetch.day }}
-            {{ "%02u"|format(fetch.hour) }}:{{ "%02u"|format(fetch.minute) }}
-        {% else %}
-            never
-        {% endif %}
-    </span>
-    <div class="navigation">
-        {% for day in acts_by_day %}
-        <button class="navigation" id="nav-btn-{{ day }}" onclick="showDay('{{ day }}');">{{ day[:2]|upper }}</button>
-        {% endfor %}
-    </div>
-    <table>
-        <tbody>
-        {% for day in acts_by_day %}
+    <ul class="navigation">
+    {% for day in acts_by_day %}
+    {{ nav_button(day[:2]|upper, "#" + day) }}
+    {% endfor %}
+        <li class="filler-item"></li>
+    {{ nav_button("info", "#info", "material-symbols-outlined") }}
+    </ul>
+    {% for day in acts_by_day %}
+    <div class="pane" id="pane-{{ day }}">
+        <table>
+            <tbody>
             {% for key, act in acts_by_day[day].items() %}
-                <tr class="day-contents {{ day }} act-name">
+                <tr class="act-name">
                     <td colspan="2" class="act-name">{{ act["name"] }}</td>
                 </tr>
-                <tr class="day-contents {{ day }}">
+                <tr>
                     <td class="act-detail-header">Showtimes: </td>
                     <td class="act-detail">
                         <ul>
@@ -53,7 +54,7 @@
                         </ul>
                     </td>
                 </tr>
-                <tr class="day-contents {{ day }}">
+                <tr>
                     <td class="act-detail-header">Dressing room: </td>
                     <td>
                         <div class="dressing-room-buttons">
@@ -85,7 +86,7 @@
                     </td>
                 </tr>
                 {% for field in free_fields %}
-                <tr class="day-contents {{ day }}">
+                <tr>
                     <td class="act-detail-header">{{ field.display_name }}: </td>
                     <td>
                         <div class="dressing-room-buttons">
@@ -102,11 +103,25 @@
                 </tr>
                 {% endfor %}
             {% endfor %}
-        {% endfor %}
-        </tbody>
-    </table>
-    Version: {{ version }}<br />
-    Loading icon by <a href="https://icons8.com">icons8</a>.
+            </tbody>
+        </table>
+    </div>
+    {% endfor %}
+
+    <div class="pane" id="pane-info">
+        <span style="font-size: 40;">
+            AmigoText Data Entry, version {{ version }}<br /><br />
+            Last programme fetch:
+            {% if fetch != None %}
+            {{ fetch.year }}-{{ fetch.month }}-{{ fetch.day }}
+            {{ "%02u"|format(fetch.hour) }}:{{ "%02u"|format(fetch.minute) }}
+            {% else %}
+            never
+            {% endif %}
+            <br />
+            Loading icon by <a href="https://icons8.com">icons8</a>.
+        </span>
+    </div>
 
     <script src="{{ url_for('static', filename="index.js") }}"></script>
 </body>

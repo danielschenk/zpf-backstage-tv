@@ -4,7 +4,7 @@
 
 body {
     font-size: 32pt;
-    font-family: system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji";
+    font-family: San Francisco, Helvetica Neue, Segoe UI, Roboto, Helvetica, Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji";
     background-color: #FAFAFA;
 }
 
@@ -59,7 +59,6 @@ td {
 }
 
 ul {
-    font: inherit;
     list-style-type: none;
 }
 
@@ -74,10 +73,6 @@ tr.act-name {
 td.act-name {
     background-color: #E4F5FD;
     font-size: 40pt;
-}
-
-tr.day-contents {
-    display: none;
 }
 
 td.day {
@@ -121,24 +116,64 @@ div.time-left {
     filter: FlipH;                 /* IE 6/7/8 */
 }
 
-div.navigation {
+ul.navigation {
     background-color: #1EAAF1;
     width: 100%;
+    display: flex;
+    padding: 0;
+    margin: 0;
 }
 
-button.navigation {
+ul.navigation li {
+    list-style-type: none;
+    padding: 25px 30px;
+    position: relative;
+}
+
+ul.navigation li, ul.navigation li a {
     color: #D2EEFC;
     font-size: 40pt;
-    border-style: none;
-    border-radius: 0%;
-    border-width: 0px;
-    background-color: transparent;
-    padding: 0em 0.5em;
-    margin: 0;
-    min-height: auto;
-    min-width: none;
-    padding-top: 20px;
-    padding-bottom: 20px;
+    font-weight: 700;
+    text-decoration: none;
+}
+
+ul.navigation li a.selected {
+    color: #ffffff;
+}
+
+div.nav-indicator {
+    display: none;
+    position: absolute;
+    width: 100%;
+    height: 5px;
+    bottom: 0px;
+    left: 0px;
+    background-color: #ffffff;
+}
+
+div.nav-indicator.selected {
+    display: block;
+}
+
+.filler-item {
+    flex-grow: 1;
+    text-align: center;
+}
+
+.material-symbols-outlined {
+    font-variation-settings:
+        'FILL' 1,
+        'wght' 400,
+        'GRAD' 0,
+        'opsz' 48;
+}
+
+div.pane {
+    display: none;
+}
+
+div.pane.selected {
+    display: block;
 }
 
 button.navigation.selected {
@@ -173,12 +208,12 @@ img.dressing-room-loader {
         background-color: #111111;
     }
 
-    td.day {
+    ul.navigation {
         background-color: #111E24;
     }
 
     td.act-name {
-        background-color: #1C2D36;
+        background-color: #1C1C1C;
     }
 
     button {
