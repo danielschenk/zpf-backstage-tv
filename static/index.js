@@ -122,13 +122,18 @@ function showButtons(actKey) {
 }
 
 function showPane(pane) {
-    window.location = "#" + pane;
+    let div = document.getElementById("pane-" + pane);
+    if (div == null) {
+        console.warn(`no pane named ${pane}`);
+        return;
+    }
+
     document.querySelectorAll("div.pane")
         .forEach(value => {
             value.classList.remove("selected");
         });
     document.querySelector(`ul.navigation li a[href="#${pane}"]`).classList.add("selected");
-    document.getElementById("pane-" + pane).classList.add("selected");
+    div.classList.add("selected");
 }
 
 function showCurrentDay() {
@@ -244,13 +249,13 @@ function handleMirrorAnimation() {
 }
 
 function onLoad() {
-    document.querySelectorAll("ul.navigation li a")
-        .forEach(value => {
-            value.addEventListener("click", e => {
-                const href = e.target.getAttribute("href");
-                showPane(href.substring(1));
-            });
-        })
+    addEventListener("hashchange", event => {
+        let pos = event.newURL.search("#");
+        if (pos > 0) {
+            showPane(event.newURL.substring(pos + 1));
+        }
+    });
+
     showCurrentDay();
     handleMinute();
     handleSecond();

@@ -132,6 +132,7 @@ ul.navigation li {
 ul.navigation li, ul.navigation li a {
     color: #D2EEFC;
     font-size: 40pt;
+    font-weight: 700;
     text-decoration: none;
 }
 
