@@ -125,6 +125,7 @@ ul.navigation {
     margin: 0;
     position: fixed;
     top: 0;
+    z-index: 2;
 }
 
 div.navigation-margin {
