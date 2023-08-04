@@ -6,6 +6,7 @@ function setDressingRoom(actKey, roomNumber) {
     }).then(response => {
         if (response.ok) {
             updateItineraryView(actKey);
+            showToast("saved");
         } else {
             handleSetItineraryItemError();
         }
@@ -25,6 +26,7 @@ function setItineraryItem(actKey, itemKey) {
     }).then(response => {
         if (response.ok) {
             updateItineraryView(actKey);
+            showToast("saved");
         } else {
             handleSetItineraryItemError();
         }
@@ -32,7 +34,7 @@ function setItineraryItem(actKey, itemKey) {
 }
 
 function handleSetItineraryItemError() {
-    window.alert("Failed to save");
+    showToast("general-error");
     showButtons();
 }
 
@@ -45,7 +47,7 @@ function updateItineraryView(actKey) {
     }
     fetch(url)
         .then(response => response.json(), () => {
-            window.alert("Failed to fetch itinerary");
+            showToast("itinerary-error");
             return Promise.reject(Error("Failed to fetch itinerary"));
         })
         .then(data => {
@@ -66,8 +68,10 @@ function updateItineraryView(actKey) {
             }
 
             showButtons(actKey);
+            hideToast("itinerary-error");
         }, () => {
             showButtons(actKey);
+            showToast("itinerary-error");
         });
 }
 
@@ -247,6 +251,31 @@ function handleMirrorAnimation() {
             }
         });
     window.setTimeout(handleMirrorAnimation, 500);
+}
+
+var toastTimeouts = {};
+
+function showToast(name, timeout=3000) {
+    if (name in toastTimeouts) {
+        // already on screen
+        clearTimeout(toastTimeouts[name]);
+        hideToast(name);
+        // re-show after a small delay (to make clear it's the same toast, but again)
+        setTimeout(() => {showToast(name, timeout);}, 250);
+        return;
+    }
+
+    document.getElementById("toast-" + name).classList.add("active");
+    if (timeout > 0) {
+        toastTimeouts[name] = setTimeout(() => { hideToast(name); }, timeout);
+    }
+}
+
+function hideToast(name) {
+    document.getElementById("toast-" + name).classList.remove("active");
+    if (name in toastTimeouts) {
+        delete toastTimeouts[name];
+    }
 }
 
 function onLoad() {

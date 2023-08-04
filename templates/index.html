@@ -109,6 +109,12 @@
     </div>
     {% endfor %}
 
+    <div class="toast-container">
+        <div class="good toast" id="toast-saved">Saved ✅</div>
+        <div class="bad toast" id="toast-general-error">Oops, that didn't work 😢</div>
+        <div class="bad toast" id="toast-itinerary-error">Failed to fetch itinerary 😢</div>
+    </div>
+
     <div class="pane" id="pane-info">
         <span style="font-size: 40;">
             AmigoText Data Entry, version {{ version }}<br /><br />
