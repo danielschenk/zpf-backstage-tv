@@ -92,7 +92,10 @@ class Website:
             raise errors.ZpfWebsiteError("no stage rows found")
 
         for row in stage_rows:
-            stage_name = row.find("div", class_="translate-y-stage-name").text
+            preceding_div = row.previousSibling
+            assert preceding_div.name == "div"
+            assert "translate-y-stage-name" in preceding_div["class"]
+            stage_name = preceding_div.text
             if stage_list is not None and stage_name not in stage_list:
                 continue
 
