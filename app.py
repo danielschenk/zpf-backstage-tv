@@ -149,7 +149,7 @@ def create_app(instance_path=DEFAULT_INSTANCE_PATH,
     initialize_nonexistent_act_itineraries(programme["acts"])
 
     if app.config["UPDATE_PROGRAMME"]:
-        scheduler.add_job(update_programme_cache, "interval", minutes=15)
+        scheduler.add_job(update_programme_cache, "interval", minutes=30)
         scheduler.start()
 
     @app.route("/")
