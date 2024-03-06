@@ -224,6 +224,8 @@ def create_app(instance_path=DEFAULT_INSTANCE_PATH,
     @app.route("/programme.ics")
     def serve_ical():
         cal = icalendar.Calendar()
+        cal.add("PRODID", "-//amigotext//NONSGML amigotext.app.event//EN")
+        cal.add("VERSION", "2.0")
         global programme
         global programme_lock
         with programme_lock:
@@ -242,7 +244,7 @@ def create_app(instance_path=DEFAULT_INSTANCE_PATH,
                     event.add("LOCATION", show["stage"])
                     cal.add_component(event)
 
-        return cal.to_ical().decode("utf-8")
+        return Response(cal.to_ical(), mimetype="text/calendar")
 
     @app.route("/itinerary/<act_key>", methods=["GET"])
     def serve_dressing_room(act_key):
