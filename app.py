@@ -241,7 +241,7 @@ def create_app(instance_path=DEFAULT_INSTANCE_PATH,
                     event.add("LAST-MODIFIED", fetch_time)
                     event.add("UID", f"{key}@{hostname}")
                     event.add("SUMMARY", act["name"])
-                    event.add("DESCRIPTION", act["description"])
+                    event.add("DESCRIPTION", f"{act['description']}\n\n{act['url']}")
                     event.add("LOCATION", show["stage"])
                     cal.add_component(event)
 
