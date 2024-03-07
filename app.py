@@ -226,6 +226,7 @@ def create_app(instance_path=DEFAULT_INSTANCE_PATH,
         cal = icalendar.Calendar()
         cal.add("PRODID", "-//amigotext//NONSGML amigotext.app.event//EN")
         cal.add("VERSION", "2.0")
+        hostname = urlparse(request.base_url).hostname
         global programme
         global programme_lock
         with programme_lock:
@@ -238,7 +239,7 @@ def create_app(instance_path=DEFAULT_INSTANCE_PATH,
                     event.add("DTEND",
                         datetime.datetime.fromtimestamp(show["end_utc"], datetime.UTC))
                     event.add("CREATED", created)
-                    event.add("UID", f"{key}@{urlparse(request.base_url).hostname}")
+                    event.add("UID", f"{key}@{hostname}")
                     event.add("SUMMARY", act["name"])
                     event.add("DESCRIPTION", act["description"])
                     event.add("LOCATION", show["stage"])
