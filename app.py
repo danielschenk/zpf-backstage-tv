@@ -239,6 +239,7 @@ def create_app(instance_path=DEFAULT_INSTANCE_PATH,
                     event.add("DTEND",
                         datetime.datetime.fromtimestamp(show["end_utc"], datetime.UTC))
                     event.add("LAST-MODIFIED", fetch_time)
+                    # TODO: this creates duplicates for acts with multiple shows
                     event.add("UID", f"{key}@{hostname}")
                     event.add("SUMMARY", act["name"])
                     event.add("DESCRIPTION", f"{act['description']}\n\n{act['url']}")
