@@ -246,22 +246,27 @@ def create_app(instance_path=DEFAULT_INSTANCE_PATH,
                     event.add("DESCRIPTION", f"{act['description']}\n\n{act['url']}")
                     event.add("LOCATION", show["stage"])
 
-                    # inject test reminder
-                    now = datetime.datetime.now(tz=datetime.UTC)
-                    deltas = [
-                        (-5, start),
-                        (-10, start),
-                        (-5, end),
-                        (-10, end),
-                        (1, now),
-                    ]
-                    for minute_offset, reference in deltas:
+                    reminders = []
+                    for value in request.args.getlist("reminder"):
+                        try:
+                            reminders.append(ReminderDefinition.from_urlparam(value))
+                        except ValueError:
+                            return Response(400, f"Error in reminder definition: {value}")
+                    if not reminders:
+                        reminders.append(ReminderDefinition("start_utc", -6))
+                        reminders.append(ReminderDefinition("end_utc", -6))
+
+                    for reminder in reminders:
                         alarm = icalendar.Alarm()
-                        trigger = reference + datetime.timedelta(minutes=minute_offset)
+                        try:
+                            reference_time = show[reminder.reference]
+                        except KeyError:
+                            return Response(400, f"Timestamp key {reminder.reference} doesn't exist in show")
+                        reference = datetime.datetime.fromtimestamp(reference_time, tz=datetime.UTC)
+                        trigger = reference + datetime.timedelta(minutes=reminder.offset_minutes)
                         alarm.add("TRIGGER", trigger)
                         alarm.add("ACTION", "DISPLAY")
                         alarm.add("DESCRIPTION", "Reminder")
-                        # alarm_uid = f"{event_uid}-alrm-{trigger}@{hostname}"
                         alarm_uid = str(uuid.uuid4())
                         alarm.add("UID", alarm_uid)
                         alarm.add("X-WR-ALARMUID", alarm_uid)
@@ -336,6 +341,17 @@ def create_app(instance_path=DEFAULT_INSTANCE_PATH,
         return flask.render_template("login.html", form=form)
 
     return app
+
+
+@dataclass
+class ReminderDefinition:
+    reference: str
+    offset_minutes: int
+
+    @classmethod
+    def from_urlparam(cls, value: str):
+        reference, offset = value.split(".", maxsplit=1)
+        return cls(reference, int(offset))
 
 
 def hour_minute(time: str):
