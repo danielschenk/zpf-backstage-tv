@@ -11,6 +11,7 @@ from typing import Mapping, OrderedDict
 from functools import cmp_to_key
 import os
 from dataclasses import dataclass
+import uuid
 from urllib.parse import urlparse, urljoin
 import flask
 from flask import Flask, render_template, jsonify, make_response, request, Response
@@ -232,37 +233,46 @@ def create_app(instance_path=DEFAULT_INSTANCE_PATH,
         with programme_lock:
             for key, act in programme["acts"].items():
                 for show in act["shows"]:
-                    start = show["start_utc"]
-                    end = show["end_utc"]
+                    start_utc = show["start_utc"]
+                    end_utc = show["end_utc"]
                     event = icalendar.Event()
-                    event.add("DTSTART",
-                        datetime.datetime.fromtimestamp(start, datetime.UTC))
-                    event.add("DTEND",
-                        datetime.datetime.fromtimestamp(end, datetime.UTC))
-                    event.add("UID", f"{key}-{show['start']}@{hostname}")
+                    start = datetime.datetime.fromtimestamp(start_utc, datetime.UTC)
+                    end = datetime.datetime.fromtimestamp(end_utc, datetime.UTC)
+                    event.add("DTSTART", start)
+                    event.add("DTEND", end)
+                    event_uid = f"{key}-{start_utc}"
+                    event.add("UID", f"{event_uid}@{hostname}")
                     event.add("SUMMARY", act["name"])
                     event.add("DESCRIPTION", f"{act['description']}\n\n{act['url']}")
                     event.add("LOCATION", show["stage"])
 
-                    end_offset = end - start
-                    offsets = [
-                        -5 * 60,
-                        -10 * 60,
-                        end_offset - 5 * 60,
-                        end_offset - 10 * 60,
+                    # inject test reminder
+                    now = datetime.datetime.now(tz=datetime.UTC)
+                    deltas = [
+                        (-5, start),
+                        (-10, start),
+                        (-5, end),
+                        (-10, end),
+                        (-1, now),
                     ]
-                    for offset_seconds in offsets:
+                    for minute_offset, reference in deltas:
                         alarm = icalendar.Alarm()
-                        trigger = datetime.datetime.fromtimestamp(start + offset_seconds,
-                                                                  datetime.UTC)
+                        trigger = reference + datetime.timedelta(minutes=minute_offset)
                         alarm.add("TRIGGER", trigger)
                         alarm.add("ACTION", "DISPLAY")
                         alarm.add("DESCRIPTION", "Reminder")
+                        # alarm_uid = f"{event_uid}-alrm-{trigger}@{hostname}"
+                        alarm_uid = str(uuid.uuid4())
+                        alarm.add("UID", alarm_uid)
+                        alarm.add("X-WR-ALARMUID", alarm_uid)
                         event.add_component(alarm)
 
                     cal.add_component(event)
 
-        return Response(cal.to_ical(), mimetype="text/calendar")
+        headers = {
+            "Cache-Control": "no-cache, no-store",
+        }
+        return Response(cal.to_ical(), headers=headers, mimetype="text/calendar")
 
     @app.route("/itinerary/<act_key>", methods=["GET"])
     def serve_dressing_room(act_key):
