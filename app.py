@@ -230,10 +230,12 @@ def create_app(instance_path=DEFAULT_INSTANCE_PATH,
         hostname = urlparse(request.base_url).hostname
         global programme
         global programme_lock
-        with programme_lock:
+        global itinerary
+        global itinerary_lock
+        with programme_lock, itinerary_lock:
             for key, act in programme["acts"].items():
                 for show in act["shows"]:
-                    event = create_ical_event(key, act, show, hostname)
+                    event = create_ical_event(key, act, show, itinerary, hostname)
 
                     reminders = []
                     for value in request.args.getlist("reminder"):
@@ -323,7 +325,7 @@ def create_app(instance_path=DEFAULT_INSTANCE_PATH,
     return app
 
 
-def create_ical_event(key, act, show, hostname):
+def create_ical_event(key, act, show, itinerary, hostname):
     start_utc = show["start_utc"]
     end_utc = show["end_utc"]
     event = icalendar.Event()
@@ -335,7 +337,12 @@ def create_ical_event(key, act, show, hostname):
     event.add("UID", f"{event_uid}@{hostname}")
     event.add("SUMMARY", act["name"])
     event.add("DESCRIPTION", f"{act['description']}\n\n{act['url']}")
-    event.add("LOCATION", show["stage"])
+    dressing_room = itinerary[key].get("dressing_room", None)
+    if dressing_room is not None and dressing_room != "None":
+        location = f"DR {dressing_room} ({show['stage']})"
+    else:
+        location = show["stage"]
+    event.add("LOCATION", location)
 
     return event
 
