@@ -232,15 +232,34 @@ def create_app(instance_path=DEFAULT_INSTANCE_PATH,
         with programme_lock:
             for key, act in programme["acts"].items():
                 for show in act["shows"]:
+                    start = show["start_utc"]
+                    end = show["end_utc"]
                     event = icalendar.Event()
                     event.add("DTSTART",
-                        datetime.datetime.fromtimestamp(show["start_utc"], datetime.UTC))
+                        datetime.datetime.fromtimestamp(start, datetime.UTC))
                     event.add("DTEND",
-                        datetime.datetime.fromtimestamp(show["end_utc"], datetime.UTC))
+                        datetime.datetime.fromtimestamp(end, datetime.UTC))
                     event.add("UID", f"{key}-{show['start']}@{hostname}")
                     event.add("SUMMARY", act["name"])
                     event.add("DESCRIPTION", f"{act['description']}\n\n{act['url']}")
                     event.add("LOCATION", show["stage"])
+
+                    end_offset = end - start
+                    offsets = [
+                        -5 * 60,
+                        -10 * 60,
+                        end_offset - 5 * 60,
+                        end_offset - 10 * 60,
+                    ]
+                    for offset_seconds in offsets:
+                        alarm = icalendar.Alarm()
+                        trigger = datetime.datetime.fromtimestamp(start + offset_seconds,
+                                                                  datetime.UTC)
+                        alarm.add("TRIGGER", trigger)
+                        alarm.add("ACTION", "DISPLAY")
+                        alarm.add("DESCRIPTION", "Reminder")
+                        event.add_component(alarm)
+
                     cal.add_component(event)
 
         return Response(cal.to_ical(), mimetype="text/calendar")
