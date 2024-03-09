@@ -6,5 +6,8 @@
     ],
     "files.associations": {
         "*.html": "jinja-html"
-    }
+    },
+    "editor.rulers": [
+        100
+    ]
 }
