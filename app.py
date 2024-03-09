@@ -230,7 +230,6 @@ def create_app(instance_path=DEFAULT_INSTANCE_PATH,
         global programme
         global programme_lock
         with programme_lock:
-            fetch_time = datetime.datetime.fromisoformat(programme["fetch_time"])
             for key, act in programme["acts"].items():
                 for show in act["shows"]:
                     event = icalendar.Event()
@@ -238,9 +237,7 @@ def create_app(instance_path=DEFAULT_INSTANCE_PATH,
                         datetime.datetime.fromtimestamp(show["start_utc"], datetime.UTC))
                     event.add("DTEND",
                         datetime.datetime.fromtimestamp(show["end_utc"], datetime.UTC))
-                    event.add("LAST-MODIFIED", fetch_time)
-                    # TODO: this creates duplicates for acts with multiple shows
-                    event.add("UID", f"{key}@{hostname}")
+                    event.add("UID", f"{key}-{show['start']}@{hostname}")
                     event.add("SUMMARY", act["name"])
                     event.add("DESCRIPTION", f"{act['description']}\n\n{act['url']}")
                     event.add("LOCATION", show["stage"])
