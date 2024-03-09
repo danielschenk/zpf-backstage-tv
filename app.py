@@ -11,6 +11,7 @@ from typing import Mapping, OrderedDict
 from functools import cmp_to_key
 import os
 from dataclasses import dataclass
+import uuid
 from urllib.parse import urlparse, urljoin
 import flask
 from flask import Flask, render_template, jsonify, make_response, request, Response
@@ -229,21 +230,36 @@ def create_app(instance_path=DEFAULT_INSTANCE_PATH,
         hostname = urlparse(request.base_url).hostname
         global programme
         global programme_lock
-        with programme_lock:
+        global itinerary
+        global itinerary_lock
+        with programme_lock, itinerary_lock:
             for key, act in programme["acts"].items():
                 for show in act["shows"]:
-                    event = icalendar.Event()
-                    event.add("DTSTART",
-                        datetime.datetime.fromtimestamp(show["start_utc"], datetime.UTC))
-                    event.add("DTEND",
-                        datetime.datetime.fromtimestamp(show["end_utc"], datetime.UTC))
-                    event.add("UID", f"{key}-{show['start']}@{hostname}")
-                    event.add("SUMMARY", act["name"])
-                    event.add("DESCRIPTION", f"{act['description']}\n\n{act['url']}")
-                    event.add("LOCATION", show["stage"])
+                    event = create_ical_event(key, act, show, itinerary, hostname)
+
+                    reminders = []
+                    for value in request.args.getlist("reminder"):
+                        try:
+                            reminders.append(ReminderDefinition.from_urlparam(value))
+                        except ValueError:
+                            return Response(f"Error in reminder definition: '{value}'", status=400)
+                    if not reminders:
+                        reminders.append(ReminderDefinition("start_utc", -6))
+                        reminders.append(ReminderDefinition("end_utc", -6))
+
+                    if bool(request.args.get("enable_reminders", True)):
+                        try:
+                            add_ical_reminders(show, event, reminders)
+                        except KeyError as e:
+                            return Response(
+                                f"Timestamp key '{e.args[0]}' doesn't exist", status=400)
+
                     cal.add_component(event)
 
-        return Response(cal.to_ical(), mimetype="text/calendar")
+        headers = {
+            "Cache-Control": "no-cache, no-store",
+        }
+        return Response(cal.to_ical(), headers=headers, mimetype="text/calendar")
 
     @app.route("/itinerary/<act_key>", methods=["GET"])
     def serve_dressing_room(act_key):
@@ -307,6 +323,53 @@ def create_app(instance_path=DEFAULT_INSTANCE_PATH,
         return flask.render_template("login.html", form=form)
 
     return app
+
+
+def create_ical_event(key, act, show, itinerary, hostname):
+    start_utc = show["start_utc"]
+    end_utc = show["end_utc"]
+    event = icalendar.Event()
+    start = datetime.datetime.fromtimestamp(start_utc, datetime.UTC)
+    end = datetime.datetime.fromtimestamp(end_utc, datetime.UTC)
+    event.add("DTSTART", start)
+    event.add("DTEND", end)
+    event_uid = f"{key}-{start_utc}"
+    event.add("UID", f"{event_uid}@{hostname}")
+    event.add("SUMMARY", act["name"])
+    event.add("DESCRIPTION", f"{act['description']}\n\n{act['url']}")
+    dressing_room = itinerary[key].get("dressing_room", None)
+    if dressing_room is not None and dressing_room != "None":
+        location = f"DR {dressing_room} ({show['stage']})"
+    else:
+        location = show["stage"]
+    event.add("LOCATION", location)
+
+    return event
+
+
+def add_ical_reminders(show, event, reminders: list["ReminderDefinition"]):
+    for reminder in reminders:
+        alarm = icalendar.Alarm()
+        reference = datetime.datetime.fromtimestamp(show[reminder.reference], tz=datetime.UTC)
+        trigger = reference + datetime.timedelta(minutes=reminder.offset_minutes)
+        alarm.add("TRIGGER", trigger)
+        alarm.add("ACTION", "DISPLAY")
+        alarm.add("DESCRIPTION", "Reminder")
+        alarm_uid = str(uuid.uuid4())
+        alarm.add("UID", alarm_uid)
+        alarm.add("X-WR-ALARMUID", alarm_uid)
+        event.add_component(alarm)
+
+
+@dataclass
+class ReminderDefinition:
+    reference: str
+    offset_minutes: int
+
+    @classmethod
+    def from_urlparam(cls, value: str):
+        reference, offset = value.split(".", maxsplit=1)
+        return cls(reference, int(offset))
 
 
 def hour_minute(time: str):
