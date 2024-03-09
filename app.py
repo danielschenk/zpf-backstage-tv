@@ -253,7 +253,7 @@ def create_app(instance_path=DEFAULT_INSTANCE_PATH,
                         (-10, start),
                         (-5, end),
                         (-10, end),
-                        (-1, now),
+                        (1, now),
                     ]
                     for minute_offset, reference in deltas:
                         alarm = icalendar.Alarm()
