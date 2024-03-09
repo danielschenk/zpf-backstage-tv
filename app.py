@@ -233,44 +233,24 @@ def create_app(instance_path=DEFAULT_INSTANCE_PATH,
         with programme_lock:
             for key, act in programme["acts"].items():
                 for show in act["shows"]:
-                    start_utc = show["start_utc"]
-                    end_utc = show["end_utc"]
-                    event = icalendar.Event()
-                    start = datetime.datetime.fromtimestamp(start_utc, datetime.UTC)
-                    end = datetime.datetime.fromtimestamp(end_utc, datetime.UTC)
-                    event.add("DTSTART", start)
-                    event.add("DTEND", end)
-                    event_uid = f"{key}-{start_utc}"
-                    event.add("UID", f"{event_uid}@{hostname}")
-                    event.add("SUMMARY", act["name"])
-                    event.add("DESCRIPTION", f"{act['description']}\n\n{act['url']}")
-                    event.add("LOCATION", show["stage"])
+                    event = create_ical_event(key, act, show, hostname)
 
                     reminders = []
                     for value in request.args.getlist("reminder"):
                         try:
                             reminders.append(ReminderDefinition.from_urlparam(value))
                         except ValueError:
-                            return Response(400, f"Error in reminder definition: {value}")
+                            return Response(f"Error in reminder definition: '{value}'", status=400)
                     if not reminders:
                         reminders.append(ReminderDefinition("start_utc", -6))
                         reminders.append(ReminderDefinition("end_utc", -6))
 
-                    for reminder in reminders:
-                        alarm = icalendar.Alarm()
+                    if bool(request.args.get("enable_reminders", True)):
                         try:
-                            reference_time = show[reminder.reference]
-                        except KeyError:
-                            return Response(400, f"Timestamp key {reminder.reference} doesn't exist in show")
-                        reference = datetime.datetime.fromtimestamp(reference_time, tz=datetime.UTC)
-                        trigger = reference + datetime.timedelta(minutes=reminder.offset_minutes)
-                        alarm.add("TRIGGER", trigger)
-                        alarm.add("ACTION", "DISPLAY")
-                        alarm.add("DESCRIPTION", "Reminder")
-                        alarm_uid = str(uuid.uuid4())
-                        alarm.add("UID", alarm_uid)
-                        alarm.add("X-WR-ALARMUID", alarm_uid)
-                        event.add_component(alarm)
+                            add_ical_reminders(show, event, reminders)
+                        except KeyError as e:
+                            return Response(
+                                f"Timestamp key '{e.args[0]}' doesn't exist", status=400)
 
                     cal.add_component(event)
 
@@ -341,6 +321,37 @@ def create_app(instance_path=DEFAULT_INSTANCE_PATH,
         return flask.render_template("login.html", form=form)
 
     return app
+
+
+def create_ical_event(key, act, show, hostname):
+    start_utc = show["start_utc"]
+    end_utc = show["end_utc"]
+    event = icalendar.Event()
+    start = datetime.datetime.fromtimestamp(start_utc, datetime.UTC)
+    end = datetime.datetime.fromtimestamp(end_utc, datetime.UTC)
+    event.add("DTSTART", start)
+    event.add("DTEND", end)
+    event_uid = f"{key}-{start_utc}"
+    event.add("UID", f"{event_uid}@{hostname}")
+    event.add("SUMMARY", act["name"])
+    event.add("DESCRIPTION", f"{act['description']}\n\n{act['url']}")
+    event.add("LOCATION", show["stage"])
+
+    return event
+
+
+def add_ical_reminders(show, event, reminders: list["ReminderDefinition"]):
+    for reminder in reminders:
+        alarm = icalendar.Alarm()
+        reference = datetime.datetime.fromtimestamp(show[reminder.reference], tz=datetime.UTC)
+        trigger = reference + datetime.timedelta(minutes=reminder.offset_minutes)
+        alarm.add("TRIGGER", trigger)
+        alarm.add("ACTION", "DISPLAY")
+        alarm.add("DESCRIPTION", "Reminder")
+        alarm_uid = str(uuid.uuid4())
+        alarm.add("UID", alarm_uid)
+        alarm.add("X-WR-ALARMUID", alarm_uid)
+        event.add_component(alarm)
 
 
 @dataclass
