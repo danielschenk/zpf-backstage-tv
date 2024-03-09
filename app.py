@@ -18,6 +18,7 @@ from flask_login import LoginManager, login_user, login_required
 from flask_bootstrap import Bootstrap
 from src import users
 from apscheduler.schedulers.background import BackgroundScheduler
+import icalendar
 
 import zpfwebsite.errors
 
@@ -219,6 +220,30 @@ def create_app(instance_path=DEFAULT_INSTANCE_PATH,
         with programme_lock:
             response = make_response(jsonify(programme))
         return response
+
+    @app.route("/programme.ics")
+    def serve_ical():
+        cal = icalendar.Calendar()
+        cal.add("PRODID", "-//amigotext//NONSGML amigotext.app.event//EN")
+        cal.add("VERSION", "2.0")
+        hostname = urlparse(request.base_url).hostname
+        global programme
+        global programme_lock
+        with programme_lock:
+            for key, act in programme["acts"].items():
+                for show in act["shows"]:
+                    event = icalendar.Event()
+                    event.add("DTSTART",
+                        datetime.datetime.fromtimestamp(show["start_utc"], datetime.UTC))
+                    event.add("DTEND",
+                        datetime.datetime.fromtimestamp(show["end_utc"], datetime.UTC))
+                    event.add("UID", f"{key}-{show['start']}@{hostname}")
+                    event.add("SUMMARY", act["name"])
+                    event.add("DESCRIPTION", f"{act['description']}\n\n{act['url']}")
+                    event.add("LOCATION", show["stage"])
+                    cal.add_component(event)
+
+        return Response(cal.to_ical(), mimetype="text/calendar")
 
     @app.route("/itinerary/<act_key>", methods=["GET"])
     def serve_dressing_room(act_key):
