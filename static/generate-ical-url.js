@@ -37,11 +37,11 @@ function updateUrl() {
                 return;
             }
 
-            relativeUrl += first ? "?reminder=" : "&reminder=";
+            relativeUrl += first ? "?reminders=" : ";";
+            relativeUrl += item.querySelector("select.reference").value;
+            relativeUrl += ".";
             relativeUrl += item.querySelector("select.before-after").value;
             relativeUrl += item.querySelector("select.minute-value").value;
-            relativeUrl += ".";
-            relativeUrl += item.querySelector("select.reference").value;
             first = false;
         });
 

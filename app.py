@@ -242,7 +242,9 @@ def create_app(instance_path=DEFAULT_INSTANCE_PATH,
                     event = create_ical_event(key, act, show, itinerary, hostname)
 
                     reminders = []
-                    for value in request.args.getlist("reminder"):
+                    for value in request.args.get("reminders", "").split(";"):
+                        if not value:
+                            continue
                         try:
                             reminders.append(ReminderDefinition.from_urlparam(value))
                         except ValueError:
