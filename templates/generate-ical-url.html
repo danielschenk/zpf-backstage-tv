@@ -1,0 +1,44 @@
+{% import "macros.jinja" as macros %}
+{% include "header.html" %}
+
+<body onload="onLoad()">
+    <ul class="navigation">
+    {{ macros.nav_button("arrow_back", "/", "material-symbols-outlined") }}
+    </ul>
+    <div class="navigation-margin"></div>
+    <p>Here you can generate a URL for a calendar feed which you can subscribe to on your
+    device, and contains up-to-date shows and dressing rooms for this stage.</p>
+
+    <p>Configure show reminders:</p>
+    <ul id="reminder-entries">
+        <li id="template-entry" class="skip" style="display: none;">
+            <select class="minute-value" onchange="updateUrl()">
+                {% for mins in range(1, 11)|list + range(15, 61, 5)|list %}
+                <option value="{{ mins }}">{{ mins }} minutes</option>
+                {% endfor %}
+            </select>
+            <select class="before-after" onchange="updateUrl()">
+                <option value="-">before</option>
+                <option value="">after</option>
+            </select>
+            <select class="reference" onchange="updateUrl()">
+                <option value="start_utc">start of show</option>
+                <option value="end_utc">end of show</option>
+            </select>
+            <button class="remove" style="color: red;" onclick="removeEntry(this);">Remove</button>
+        </li>
+        <li id="add-button-entry" class="skip">
+            <button onclick="addEntry();">Add new</button>
+        </li>
+    </ul>
+
+    <br />
+    <button><a id="apple-url">Add to Apple / system app</a></button>
+    <button><a id="google-url">Add to Google</a></button>
+
+    <p>Or, copy below URL and add it to any iCalendar-compatible app:</p>
+    <p id="url" class="code"></p>
+    <button onclick="copy()">Copy <span class="material-symbols-outlined">content_copy</span></button>
+
+    <script src="{{ url_for('static', filename="generate-ical-url.js") }}"></script>
+</body>

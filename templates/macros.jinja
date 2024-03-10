@@ -1,0 +1,6 @@
+{% macro nav_button(text, target, a_classes) %}
+        <li>
+            <a href="{{ target }}" class="{{ a_classes }}">{{ text }}</a>
+            <div class="nav-indicator" id="nav-indicator-{{ target }}"></div>
+        </li>
+{% endmacro %}

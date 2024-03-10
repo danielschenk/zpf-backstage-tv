@@ -1,6 +1,15 @@
 {% extends 'bootstrap/base.html' %}
 {% import "bootstrap/wtf.html" as wtf %}
 
-{% block content %}
-    {{ wtf.quick_form(form) }}
-{% endblock %}
+{% import "macros.jinja" as macros %}
+{% include "header.html" %}
+<body>
+    {% block content %}
+        <ul class="navigation">
+            <li class="filler-item"></li>
+        {{ macros.nav_button("calendar_month", "/generate-ical-url", "material-symbols-outlined") }}
+        </ul>
+        <div class="navigation-margin"></div>
+        {{ wtf.quick_form(form) }}
+    {% endblock %}
+</body>

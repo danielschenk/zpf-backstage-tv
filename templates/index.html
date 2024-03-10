@@ -1,15 +1,6 @@
-{% macro nav_button(text, target, a_classes) %}
-        <li>
-            <a href="{{ target }}" class="{{ a_classes }}">{{ text }}</a>
-            <div class="nav-indicator" id="nav-indicator-{{ target }}"></div>
-        </li>
-{% endmacro %}
+{% import "macros.jinja" as macros %}
+{% include "header.html" %}
 
-<head>
-    <title>AmigoText backend</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='index.css') }}" />
-    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" />
-</head>
 <body onload="onLoad()">
     <div style="display: {{ dev_mode_display }}">
         <h2>Developer tools</h2>
@@ -19,11 +10,11 @@
     </div>
     <ul class="navigation">
     {% for day in acts_by_day %}
-    {{ nav_button(day[:2]|upper, "#" + day) }}
+    {{ macros.nav_button(day[:2]|upper, "#" + day) }}
     {% endfor %}
         <li class="filler-item"></li>
-    {{ nav_button("calendar_month", "/programme.ics", "material-symbols-outlined") }}
-    {{ nav_button("info", "#info", "material-symbols-outlined") }}
+    {{ macros.nav_button("calendar_month", "/generate-ical-url", "material-symbols-outlined") }}
+    {{ macros.nav_button("info", "#info", "material-symbols-outlined") }}
     </ul>
     <div class="navigation-margin"></div>
     {% for day in acts_by_day %}

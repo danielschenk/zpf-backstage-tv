@@ -222,6 +222,10 @@ def create_app(instance_path=DEFAULT_INSTANCE_PATH,
             response = make_response(jsonify(programme))
         return response
 
+    @app.route("/generate-ical-url")
+    def serve_ical_ui():
+        return render_template("generate-ical-url.html")
+
     @app.route("/programme.ics")
     def serve_ical():
         cal = icalendar.Calendar()
@@ -238,7 +242,9 @@ def create_app(instance_path=DEFAULT_INSTANCE_PATH,
                     event = create_ical_event(key, act, show, itinerary, hostname)
 
                     reminders = []
-                    for value in request.args.getlist("reminder"):
+                    for value in request.args.get("reminders", "").split(";"):
+                        if not value:
+                            continue
                         try:
                             reminders.append(ReminderDefinition.from_urlparam(value))
                         except ValueError:
@@ -247,7 +253,7 @@ def create_app(instance_path=DEFAULT_INSTANCE_PATH,
                         reminders.append(ReminderDefinition("start_utc", -6))
                         reminders.append(ReminderDefinition("end_utc", -6))
 
-                    if bool(request.args.get("enable_reminders", True)):
+                    if int(request.args.get("enable_reminders", 1)):
                         try:
                             add_ical_reminders(show, event, reminders)
                         except KeyError as e:
