@@ -70,6 +70,11 @@ button {
     color: var(--button-inactive-color);
 }
 
+button a {
+    color: inherit;
+    text-decoration: none;
+}
+
 button.data-entry.selected {
     color: var(--button-active-color);
     font-weight: 900;

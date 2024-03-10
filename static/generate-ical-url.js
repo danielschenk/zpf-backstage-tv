@@ -14,8 +14,10 @@ function onLoad() {
 function addEntry() {
     var newEntry = document.getElementById("template-entry").cloneNode(true);
     newEntry.removeAttribute("id");
+    newEntry.classList.remove("skip");
     newEntry.style.display = "block";
-    document.getElementById("reminder-entries").appendChild(newEntry);
+    document.getElementById("add-button-entry").insertAdjacentElement("beforebegin",
+        newEntry);
     updateUrl();
     return newEntry;
 }
@@ -30,7 +32,7 @@ function updateUrl() {
     var relativeUrl = "/programme.ics";
     document.getElementById("reminder-entries")
         .querySelectorAll("li").forEach(item => {
-            if (item.id == "template-entry")
+            if (item.classList.contains("skip"))
             {
                 return;
             }
@@ -43,6 +45,13 @@ function updateUrl() {
             first = false;
         });
 
-    document.getElementById("url").innerText = window.location.protocol + "//" + window.location.host +
-        relativeUrl;
+    var webcalUrl = "webcal://" + window.location.host + relativeUrl;
+    document.getElementById("url").innerText = webcalUrl;
+    document.getElementById("apple-url").href = webcalUrl;
+    var googleUrl = "https://calendar.google.com/calendar/r?cid=" + webcalUrl;
+    document.getElementById("google-url").href = googleUrl;
+}
+
+function copy() {
+    navigator.clipboard.writeText(document.getElementById("url").innerText);
 }
