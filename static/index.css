@@ -65,7 +65,7 @@ button.data-entry.selected {
     font-weight: 900;
 }
 
-input {
+input, select {
     font-family: inherit;
     font-size: 22pt;
     color: var(--text-color);
@@ -74,8 +74,11 @@ input {
     border-width: 1px;
     border-color: grey;
     border-radius: 10px;
-    width: 10em;
     min-height: 2em;
+}
+
+input {
+    width: 10em;
 }
 
 td {

@@ -222,6 +222,10 @@ def create_app(instance_path=DEFAULT_INSTANCE_PATH,
             response = make_response(jsonify(programme))
         return response
 
+    @app.route("/generate-ical-url")
+    def serve_ical_ui():
+        return render_template("generate-ical-url.html")
+
     @app.route("/programme.ics")
     def serve_ical():
         cal = icalendar.Calendar()
