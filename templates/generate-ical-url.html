@@ -14,7 +14,7 @@
         <li id="template-entry" style="display: none;">
             <select class="minute-value" onchange="updateUrl()">
                 {% for mins in range(1, 11)|list + range(15, 61, 5)|list %}
-                <option value="{{ mins }}">{{ mins }} minutes</option>
+                <option value="{{ mins }}">{{ mins }} minute{{ "s" if mins > 1 else "" }}</option>
                 {% endfor %}
             </select>
             <select class="before-after" onchange="updateUrl()">
@@ -38,7 +38,7 @@
 
     <p>Or, copy below URL and add it to any iCalendar-compatible app:</p>
     <p id="url" class="code"></p>
-    <button onclick="copy()">Copy <span class="material-symbols-outlined">content_copy</span></button>
+    <button onclick="copy()"><span class="material-symbols-outlined">content_copy</span> Copy</button>
 
     <script src="{{ url_for('static', filename="generate-ical-url.js") }}"></script>
 </body>
