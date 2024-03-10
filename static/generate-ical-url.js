@@ -14,7 +14,7 @@ function onLoad() {
 function addEntry() {
     var newEntry = document.getElementById("template-entry").cloneNode(true);
     newEntry.removeAttribute("id");
-    newEntry.classList.remove("skip");
+    newEntry.classList.add("reminder-entry");
     newEntry.style.display = "block";
     document.getElementById("add-button-entry").insertAdjacentElement("beforebegin",
         newEntry);
@@ -31,12 +31,7 @@ function updateUrl() {
     var first = true;
     var relativeUrl = "/programme.ics";
     document.getElementById("reminder-entries")
-        .querySelectorAll("li").forEach(item => {
-            if (item.classList.contains("skip"))
-            {
-                return;
-            }
-
+        .querySelectorAll("li.reminder-entry").forEach(item => {
             relativeUrl += first ? "?reminders=" : ";";
             relativeUrl += item.querySelector("select.reference").value;
             relativeUrl += ".";
