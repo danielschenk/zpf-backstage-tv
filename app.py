@@ -251,7 +251,7 @@ def create_app(instance_path=DEFAULT_INSTANCE_PATH,
                         reminders.append(ReminderDefinition("start_utc", -6))
                         reminders.append(ReminderDefinition("end_utc", -6))
 
-                    if bool(request.args.get("enable_reminders", True)):
+                    if int(request.args.get("enable_reminders", 1)):
                         try:
                             add_ical_reminders(show, event, reminders)
                         except KeyError as e:

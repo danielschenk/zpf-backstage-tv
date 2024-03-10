@@ -45,6 +45,11 @@ function updateUrl() {
             first = false;
         });
 
+    if (first) {
+        // no entries were processed, prevent default reminders you get for no url params
+        relativeUrl += "?enable_reminders=0";
+    }
+
     var webcalUrl = "webcal://" + window.location.host + relativeUrl;
     document.getElementById("url").innerText = webcalUrl;
     document.getElementById("apple-url").href = webcalUrl;
