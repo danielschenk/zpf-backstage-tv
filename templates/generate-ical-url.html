@@ -25,20 +25,20 @@
                 <option value="start_utc">start of show</option>
                 <option value="end_utc">end of show</option>
             </select>
-            <button class="remove" onclick="removeEntry(this);">remove</button>
+            <button class="remove" style="color: red;" onclick="removeEntry(this);">Remove</button>
         </li>
         <li id="add-button-entry" class="skip">
-            <button onclick="addEntry();">add new</button>
+            <button onclick="addEntry();">Add new</button>
         </li>
     </ul>
 
     <br />
-    <button><a id="apple-url">add to Apple</a></button>
-    <button><a id="google-url">add to Google</a></button>
+    <button><a id="apple-url">Add to Apple / system app</a></button>
+    <button><a id="google-url">Add to Google</a></button>
 
     <p>Or, copy below URL and add it to any iCalendar-compatible app:</p>
     <p id="url" class="code"></p>
-    <button onclick="copy()">copy <span class="material-symbols-outlined">content_copy</span></button>
+    <button onclick="copy()">Copy <span class="material-symbols-outlined">content_copy</span></button>
 
     <script src="{{ url_for('static', filename="generate-ical-url.js") }}"></script>
 </body>
