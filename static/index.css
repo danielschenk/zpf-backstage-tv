@@ -44,6 +44,16 @@ h2 {
     font-size: 50pt;
 }
 
+p.code {
+    font-family: 'Courier New', Courier, monospace;
+    font-size: 22pt;
+    padding: 5px;
+    border-style: solid;
+    border-color: grey;
+    border-radius: 10px;
+    border-width: 1px;
+}
+
 button {
     min-height: 2em;
     min-width: 2em;
