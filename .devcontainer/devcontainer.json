@@ -1,0 +1,19 @@
+{
+    "build": {
+        "dockerfile": "Dockerfile",
+        "context": ".."
+    },
+
+    "customizations": {
+        "vscode": {
+            "extensions": [
+                "samuelcolvin.jinjahtml",
+                "ms-python.python",
+                "ms-python.flake8"
+            ]
+        }
+    },
+
+    "forwardPorts": [5000],
+    "remoteUser": "vscode"
+}
