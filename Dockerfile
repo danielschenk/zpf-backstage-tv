@@ -8,16 +8,25 @@ RUN pip install -U --no-cache-dir pip \
 
 FROM danielschenk/python-slim-iot:master
 
+ARG USERNAME=user
+ARG USER_UID=1000
+ARG USER_GID=$USER_UID
+
+RUN groupadd --gid $USER_GID $USERNAME \
+    && useradd --uid $USER_UID --gid $USER_GID -m $USERNAME
+
 COPY --from=builder /opt/venv /opt/venv
 ENV PATH="/opt/venv/bin:$PATH"
 
+RUN mkdir /instance && chown $USER_UID:$USER_GID /instance
 COPY zpfwebsite /zpfwebsite
-COPY instance /instance
 COPY static /static
 COPY templates /templates
 COPY src /src
 COPY app.py /
 ARG VERSION=unknown
 RUN echo ${VERSION} > VERSION
+
+USER $USERNAME
 
 ENTRYPOINT ["flask", "run"]
