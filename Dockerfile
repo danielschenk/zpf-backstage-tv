@@ -29,4 +29,6 @@ RUN echo ${VERSION} > VERSION
 
 USER $USERNAME
 
-ENTRYPOINT ["flask", "run"]
+ENV HOST=127.0.0.1
+ENV PORT=8080
+ENTRYPOINT waitress-serve --host=$HOST --port=$PORT --call app:create_app
