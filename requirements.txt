@@ -1,6 +1,6 @@
 beautifulsoup4~=4.12.2
 requests~=2.31.0
-cachecontrol~=0.13.1
+cachecontrol~=0.14.0
 filelock~=3.13.1
 apscheduler~=3.10.4
 flask~=3.0.2
