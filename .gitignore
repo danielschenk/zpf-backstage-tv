@@ -2,3 +2,5 @@
 .idea/
 programme/
 .DS_Store
+.venv/
+
