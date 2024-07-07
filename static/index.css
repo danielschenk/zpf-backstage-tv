@@ -291,6 +291,11 @@ div.toast.active {
     animation: fadein 0.5s, fadeout 0.5s 2.5s;
 }
 
+div.centered {
+    display: flex;
+    justify-content: center;
+}
+
 @-webkit-keyframes fadein {
     from {bottom: 0; opacity: 0;}
     to {bottom: 30px; opacity: 1;}

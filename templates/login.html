@@ -11,5 +11,8 @@
         </ul>
         <div class="navigation-margin"></div>
         {{ wtf.quick_form(form) }}
+        <div class="centered">
+            <img src="{{ url_for('static', filename='logo.png') }}", width="300"/>
+        </div>
     {% endblock %}
 </body>

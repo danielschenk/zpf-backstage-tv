@@ -3,4 +3,11 @@
     <link rel="stylesheet" href="{{ url_for('static', filename='index.css') }}" />
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" />
     <link rel="shortcut icon" type="image/png" href="{{ url_for('static', filename='icon.png') }}" />
+    <link rel="apple-touch-icon" type="image/png" href="{{ url_for('static', filename='icon.png') }}" />
+    {# TODO this doesn't work because Apple expects all specific sizes #}
+    {# <link rel="apple-touch-startup-image" type="image/png" href="{{ url_for('static', filename='splash.png') }}" /> #}
+
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-title" content="{{ config['INSTANCE_NAME'] }}">
+
 </head>
