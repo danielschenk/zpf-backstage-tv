@@ -22,6 +22,7 @@ from src import users
 from apscheduler.schedulers.background import BackgroundScheduler
 import icalendar
 import requests
+import sentry_sdk
 
 import zpfwebsite.errors
 
@@ -89,6 +90,11 @@ def create_app(instance_path=DEFAULT_INSTANCE_PATH,
 
     logging.basicConfig(format="%(asctime)s - %(name)10s - %(levelname)7s - %(message)s")
     logger = logging.getLogger("app")
+
+    dsn = app.config["SENTRY_DSN"]
+    if dsn is not None:
+        env = app.config["SENTRY_ENV"]
+        sentry_sdk.init(dsn=dsn, environment=env)
 
     _key = app.config["SECRET_KEY"]
     if _key is None:
