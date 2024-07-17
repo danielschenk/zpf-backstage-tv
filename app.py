@@ -125,6 +125,7 @@ def create_app(instance_path=DEFAULT_INSTANCE_PATH,
             programme_temp = website.get_programme(stage_list=["AMIGO"])
         except (zpfwebsite.errors.ZpfWebsiteError, requests.HTTPError) as e:
             logger.error(e)
+            sentry_sdk.capture_exception(e)
             return
         add_show_timestamps(programme_temp["acts"])
         global programme
