@@ -53,8 +53,9 @@ class Website:
         for day, day_of_month, url in zip(weekdays, days_of_month,
                                           self.get_programme_day_urls()):
             print(f'getting {day}...')
-            html = self.session.get(url).content
-            self._parse_block_diagram(html, day, day_of_month, programme["acts"],
+            response = self.session.get(url)
+            response.raise_for_status()
+            self._parse_block_diagram(response.content, day, day_of_month, programme["acts"],
                                       stage_list)
         print("done getting programme")
 
@@ -75,8 +76,9 @@ class Website:
         return days
 
     def get_programme_day_urls(self):
-        html = self.session.get(self.BLOCK_DIAGRAM_BASE_URL).content
-        soup = bs4.BeautifulSoup(html, features=self._BS4_FEATURES)
+        response = self.session.get(self.BLOCK_DIAGRAM_BASE_URL)
+        response.raise_for_status()
+        soup = bs4.BeautifulSoup(response.content, features=self._BS4_FEATURES)
         urls = []
         for link in soup.find_all("a", string=("DO", "VR", "ZA", "ZO")):
             urls.append(link["href"])
@@ -114,8 +116,9 @@ class Website:
                     entry["url"] = link["href"]
 
                     print(f'getting and parsing page for act "{entry["name"]}"')
-                    act_html = self.details_session.get(entry["url"]).content
-                    soup_act = bs4.BeautifulSoup(act_html, features=self._BS4_FEATURES)
+                    response = self.details_session.get(entry["url"])
+                    response.raise_for_status()
+                    soup_act = bs4.BeautifulSoup(response.content, features=self._BS4_FEATURES)
                     paragraphs = soup_act.find_all("p")
                     entry["description"] = "\n\n".join(p.text for p in paragraphs)
                     entry["description_html"] = "".join(str(p) for p in paragraphs)

@@ -20,6 +20,7 @@ from flask_bootstrap import Bootstrap
 from src import users
 from apscheduler.schedulers.background import BackgroundScheduler
 import icalendar
+import requests
 
 import zpfwebsite.errors
 
@@ -110,7 +111,11 @@ def create_app(instance_path=DEFAULT_INSTANCE_PATH,
 
     def update_programme_cache():
         website = zpfwebsite.Website()
-        programme_temp = website.get_programme(stage_list=["AMIGO"])
+        try:
+            programme_temp = website.get_programme(stage_list=["AMIGO"])
+        except (zpfwebsite.errors.ZpfWebsiteError, requests.HTTPError) as e:
+            print(f"error: {e}")
+            return
         add_show_timestamps(programme_temp["acts"])
         global programme
         global programme_lock
@@ -135,10 +140,7 @@ def create_app(instance_path=DEFAULT_INSTANCE_PATH,
             add_show_timestamps(programme["acts"])
     except (FileNotFoundError, IncompatibleCacheError):
         print("no programme cache on disk or incompatible, need initial fetch")
-        try:
-            update_programme_cache()
-        except zpfwebsite.errors.ZpfWebsiteError as e:
-            print(f"error: {e}")
+        update_programme_cache()
 
     try:
         global itinerary
