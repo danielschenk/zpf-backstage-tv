@@ -13,6 +13,7 @@ import os
 from dataclasses import dataclass
 import uuid
 from urllib.parse import urlparse, urljoin
+import logging
 import flask
 from flask import Flask, render_template, jsonify, make_response, request, Response
 from flask_login import LoginManager, login_user, login_required
@@ -86,9 +87,12 @@ def create_app(instance_path=DEFAULT_INSTANCE_PATH,
     app.config.from_object("src.default_settings")
     app.config.from_pyfile(config_filename, silent=True)
 
+    logging.basicConfig(format="%(asctime)s - %(name)10s - %(levelname)7s - %(message)s")
+    logger = logging.getLogger("app")
+
     _key = app.config["SECRET_KEY"]
     if _key is None:
-        print("WARNING: SECRET_KEY not set, using random key every restart!")
+        logger.warn("SECRET_KEY not set, using random key every restart!")
         _key = os.urandom(64)
     app.config["SECRET_KEY"] = _key
 
@@ -114,7 +118,7 @@ def create_app(instance_path=DEFAULT_INSTANCE_PATH,
         try:
             programme_temp = website.get_programme(stage_list=["AMIGO"])
         except (zpfwebsite.errors.ZpfWebsiteError, requests.HTTPError) as e:
-            print(f"error: {e}")
+            logger.error(e)
             return
         add_show_timestamps(programme_temp["acts"])
         global programme
@@ -129,7 +133,7 @@ def create_app(instance_path=DEFAULT_INSTANCE_PATH,
     try:
         global programme
         with app.open_instance_resource("programme_cache.json", "r") as f:
-            print("found programme cache on disk")
+            logger.info("found programme cache on disk")
             programme = json.load(f)
             try:
                 major, minor = programme["schema_version"].split(".")
@@ -139,16 +143,16 @@ def create_app(instance_path=DEFAULT_INSTANCE_PATH,
                 raise IncompatibleCacheError()
             add_show_timestamps(programme["acts"])
     except (FileNotFoundError, IncompatibleCacheError):
-        print("no programme cache on disk or incompatible, need initial fetch")
+        logger.info("no programme cache on disk or incompatible, need initial fetch")
         update_programme_cache()
 
     try:
         global itinerary
         with app.open_instance_resource("itinerary.json", "r") as f:
-            print("found persisted itinerary on disk")
+            logger.info("found persisted itinerary on disk")
             itinerary = json.load(f)
     except FileNotFoundError:
-        print("no itinerary on disk")
+        logger.info("no itinerary on disk")
 
     initialize_nonexistent_act_itineraries(programme["acts"])
 

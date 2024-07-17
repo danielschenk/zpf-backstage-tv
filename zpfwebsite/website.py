@@ -2,6 +2,7 @@ import os
 import pathlib
 import hashlib
 from typing import Optional, List, Mapping
+import logging
 import requests
 from cachecontrol import CacheControl
 from cachecontrol.caches.file_cache import FileCache
@@ -24,7 +25,8 @@ class Website:
         home = pathlib.Path(os.path.expanduser("~"))
         cache_dir = "requests-cache-dev" if force_cache else "requests_cache"
         cache_path = home / ".python-zpfwebsite" / cache_dir
-        print(f"storing requests cache in: {cache_path}")
+        self._logger = logging.getLogger(__class__.__name__)
+        self._logger.debug(f"storing requests cache in: {cache_path}")
         cache_path.mkdir(parents=True, exist_ok=True)
 
         heuristic = _DaysHeuristic(7) if force_cache else None
@@ -52,12 +54,12 @@ class Website:
         }
         for day, day_of_month, url in zip(weekdays, days_of_month,
                                           self.get_programme_day_urls()):
-            print(f'getting {day}...')
+            self._logger.info(f'getting {day}...')
             response = self.session.get(url)
             response.raise_for_status()
             self._parse_block_diagram(response.content, day, day_of_month, programme["acts"],
                                       stage_list)
-        print("done getting programme")
+        self._logger.info("done getting programme")
 
         return programme
 
@@ -115,7 +117,7 @@ class Website:
                     entry["name"] = name
                     entry["url"] = link["href"]
 
-                    print(f'getting and parsing page for act "{entry["name"]}"')
+                    self._logger.debug(f'getting and parsing page for act "{entry["name"]}"')
                     response = self.details_session.get(entry["url"])
                     response.raise_for_status()
                     soup_act = bs4.BeautifulSoup(response.content, features=self._BS4_FEATURES)
