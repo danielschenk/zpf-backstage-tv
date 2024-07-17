@@ -84,6 +84,8 @@ class Website:
         urls = []
         for link in soup.find_all("a", string=("DO", "VR", "ZA", "ZO")):
             urls.append(link["href"])
+        if not urls:
+            raise errors.ZpfWebsiteError("Day URLs could not be found")
         return urls
 
     def _parse_block_diagram(self, html, day, day_of_month, program: dict, stage_list=None):
