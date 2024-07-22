@@ -9,6 +9,16 @@
     <p>Here you can generate a URL for a calendar feed which you can subscribe to on your
     device, and contains up-to-date shows and dressing rooms for this stage.</p>
 
+    <p>Include days:</p>
+    <ul id="days">
+        {% for day in ("donderdag", "vrijdag", "zaterdag", "zondag") %}
+        <li>
+            <input type="checkbox" id="enable-{{ day }}" value="{{ day }}" onclick="updateUrl()" checked>
+            <label for="enable-{{ day }}">{{ day }}</label>
+        </li>
+        {% endfor %}
+    </ul>
+
     <p>Configure show reminders:</p>
     <ul id="reminder-entries">
         <li id="template-entry" style="display: none;">

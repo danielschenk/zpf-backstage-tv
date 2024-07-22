@@ -245,6 +245,7 @@ def create_app(instance_path=DEFAULT_INSTANCE_PATH,
         cal.add("PRODID", "-//amigotext//NONSGML amigotext.app.event//EN")
         cal.add("VERSION", "2.0")
         hostname = urlparse(request.base_url).hostname
+        days = request.args.get("days", "donderdag;vrijdag;zaterdag;zondag").split(";")
         global programme
         global programme_lock
         global itinerary
@@ -252,6 +253,8 @@ def create_app(instance_path=DEFAULT_INSTANCE_PATH,
         with programme_lock, itinerary_lock:
             for key, act in programme["acts"].items():
                 for show in act["shows"]:
+                    if show["day"] not in days:
+                        continue
                     event = create_ical_event(key, act, show, itinerary, hostname)
 
                     reminders = []

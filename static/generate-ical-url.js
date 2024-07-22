@@ -45,6 +45,15 @@ function updateUrl() {
         relativeUrl += "?enable_reminders=0";
     }
 
+    first = true;
+    document.getElementById("days").querySelectorAll("input").forEach(item => {
+            if (item.checked) {
+                relativeUrl += first ? "&days=" : ";";
+                relativeUrl += item.getAttribute("value");
+                first = false;
+            }
+        });
+
     var webcalUrl = "webcal://" + window.location.host + relativeUrl;
     document.getElementById("url").innerText = webcalUrl;
     document.getElementById("apple-url").href = webcalUrl;

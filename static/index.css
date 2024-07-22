@@ -52,6 +52,7 @@ p.code {
     border-color: grey;
     border-radius: 10px;
     border-width: 1px;
+    word-wrap: break-word;
 }
 
 button {
@@ -92,8 +93,13 @@ input, select {
     min-height: 2em;
 }
 
-input {
+input[type=text] {
     width: 10em;
+}
+
+input[type=checkbox] {
+    min-width: 2em;
+    min-height: 2em;
 }
 
 td {
