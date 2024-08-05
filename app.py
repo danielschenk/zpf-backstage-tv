@@ -21,7 +21,7 @@ from flask_bootstrap import Bootstrap
 from src import users
 from apscheduler.schedulers.background import BackgroundScheduler
 import icalendar
-import requests
+import requests.auth
 import sentry_sdk
 
 import zpfwebsite.errors
@@ -31,9 +31,13 @@ APP_DIR = pathlib.Path(__file__).parent
 DEFAULT_INSTANCE_PATH = APP_DIR / "instance"
 
 programme = {
+    "schema_version": "1.0",
     "acts": {}
 }
 programme_lock = threading.Lock()
+
+acts = {}
+acts_lock = threading.Lock()
 
 itinerary = {}
 itinerary_lock = threading.Lock()
@@ -114,29 +118,29 @@ def create_app(instance_path=DEFAULT_INSTANCE_PATH,
         global itinerary
         global itinerary_lock
         with itinerary_lock:
-            for key in acts:
+            for act in acts:
+                key = str(act["id"])
                 if key not in itinerary:
                     itinerary[key] = {"dressing_room": "None"}
             persist_itinerary(itinerary)
 
     def update_programme_cache():
-        website = zpfwebsite.Website()
-        try:
-            programme_temp = website.get_programme(stage_list=["AMIGO"])
-        except (zpfwebsite.errors.ZpfWebsiteError, requests.HTTPError) as e:
-            logger.error(e)
-            sentry_sdk.capture_exception(e)
-            return
-        add_show_timestamps(programme_temp["acts"])
-        global programme
-        global programme_lock
-        with programme_lock:
-            programme = programme_temp.copy()
-        with app.open_instance_resource("programme_cache.json", "w+") as f:
-            json.dump(programme_temp, f, indent=2)
+        config = app.config
+        session = requests.Session()
+        session.auth = requests.auth.HTTPBasicAuth(config["ACTS_USERNAME"], config["ACTS_PASSWORD"])
+        response = session.get(config["ACTS_URL"])
+        response.raise_for_status()
+        global acts
+        global acts_lock
+        acts_temp = response.json()
+        with acts_lock:
+            acts = acts_temp
+        with app.open_instance_resource("acts.json", "wb+") as f:
+            f.write(response.content)
 
-        initialize_nonexistent_act_itineraries(programme_temp["acts"])
+        initialize_nonexistent_act_itineraries(acts_temp)
 
+    fetch_now = False
     try:
         global programme
         with app.open_instance_resource("programme_cache.json", "r") as f:
@@ -144,14 +148,29 @@ def create_app(instance_path=DEFAULT_INSTANCE_PATH,
             programme = json.load(f)
             try:
                 major, minor = programme["schema_version"].split(".")
-                if major == 0 and minor < 2:
+                if int(major) < 1:
                     raise IncompatibleCacheError()
             except KeyError:
                 raise IncompatibleCacheError()
-            add_show_timestamps(programme["acts"])
     except (FileNotFoundError, IncompatibleCacheError):
-        logger.info("no programme cache on disk or incompatible, need initial fetch")
-        update_programme_cache()
+        logger.warning("no programme cache on disk or incompatible, need initial fetch")
+        fetch_now = True
+
+    try:
+        global acts
+        with app.open_instance_resource("acts.json", "r") as f:
+            logger.info("found persisted acts on disk")
+            acts = json.load(f)
+    except FileNotFoundError:
+        logger.warning("no acts on disk, need initial fetch")
+        fetch_now = True
+
+    if fetch_now:
+        try:
+            update_programme_cache()
+        except Exception as e:
+            logger.error(e)
+            sentry_sdk.capture_exception(e)
 
     try:
         global itinerary
@@ -159,9 +178,9 @@ def create_app(instance_path=DEFAULT_INSTANCE_PATH,
             logger.info("found persisted itinerary on disk")
             itinerary = json.load(f)
     except FileNotFoundError:
-        logger.info("no itinerary on disk")
+        logger.warning("no itinerary on disk")
 
-    initialize_nonexistent_act_itineraries(programme["acts"])
+    initialize_nonexistent_act_itineraries(acts)
 
     if app.config["UPDATE_PROGRAMME"]:
         scheduler.add_job(update_programme_cache, "interval", minutes=30)
@@ -171,7 +190,7 @@ def create_app(instance_path=DEFAULT_INSTANCE_PATH,
     @login_required
     def serve_index():
         """Main page handler"""
-        with programme_lock:
+        with acts_lock:
             acts_by_day = OrderedDict()
             # pre-add days to ensure correct order
             for day in ("donderdag", "vrijdag", "zaterdag", "zondag"):
