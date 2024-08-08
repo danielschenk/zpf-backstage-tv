@@ -201,49 +201,49 @@ def create_app(instance_path=DEFAULT_INSTANCE_PATH,
     @login_required
     def serve_index():
         """Main page handler"""
-        with acts_lock:
-            acts_by_day = OrderedDict()
-            # pre-add days to ensure correct order
-            for day in ("donderdag", "vrijdag", "zaterdag", "zondag"):
-                acts_by_day[day] = {}
+        programme = make_legacy_programme("AMIGO")
+        acts_by_day = OrderedDict()
+        # pre-add days to ensure correct order
+        for day in ("woensdag", "donderdag", "vrijdag", "zaterdag", "zondag"):
+            acts_by_day[day] = {}
 
-            def compare_show_times(act1, act2):
-                """Compare show times, assuming next day at 06:00 instead of midnight"""
-                start1 = act1[1]["shows"][0]["start"]
-                start2 = act2[1]["shows"][0]["start"]
+        def compare_show_times(act1, act2):
+            """Compare show times, assuming next day at 06:00 instead of midnight"""
+            start1 = act1[1]["shows"][0]["start"]
+            start2 = act2[1]["shows"][0]["start"]
 
-                if start1 == start2:
-                    return 0
+            if start1 == start2:
+                return 0
 
-                next_festival_day = "06:00"
-                if start1 < start2:
-                    if start1 < next_festival_day and start2 >= next_festival_day:
-                        # greater than (because one show is past midnight,
-                        # but still same evening)
-                        return 1
-                    return -1
-                elif start1 > start2:
-                    if start1 >= next_festival_day and start2 < next_festival_day:
-                        # lesser than (because one show is past midnight,
-                        # but still same evening)
-                        return -1
+            next_festival_day = "06:00"
+            if start1 < start2:
+                if start1 < next_festival_day and start2 >= next_festival_day:
+                    # greater than (because one show is past midnight,
+                    # but still same evening)
                     return 1
+                return -1
+            elif start1 > start2:
+                if start1 >= next_festival_day and start2 < next_festival_day:
+                    # lesser than (because one show is past midnight,
+                    # but still same evening)
+                    return -1
+                return 1
 
-            acts = OrderedDict(sorted(programme["acts"].items(),
-                               key=cmp_to_key(compare_show_times)))
+        acts = OrderedDict(sorted(programme["acts"].items(),
+                           key=cmp_to_key(compare_show_times)))
 
-            for key, act in acts.items():
-                for show in act["shows"]:
-                    day = show["day"]
-                    if key not in acts_by_day[day]:
-                        assert day in acts_by_day
-                        acts_by_day[day][key] = act.copy()
+        for key, act in acts.items():
+            for show in act["shows"]:
+                day = show["day"]
+                if key not in acts_by_day[day]:
+                    assert day in acts_by_day
+                    acts_by_day[day][key] = act.copy()
 
-            fetch_time = programme.get("fetch_time", None)
-            if fetch_time is not None:
-                fetch_time = datetime.datetime.fromisoformat(programme["fetch_time"])
-            else:
-                fetch_time = None
+        fetch_time = programme.get("fetch_time", None)
+        if fetch_time is not None:
+            fetch_time = datetime.datetime.fromisoformat(programme["fetch_time"])
+        else:
+            fetch_time = None
 
         dev_mode_display = "block" if "devMode" in request.args else "none"
 
@@ -274,7 +274,8 @@ def create_app(instance_path=DEFAULT_INSTANCE_PATH,
             for act in acts:
                 key = str(act["id"])
                 legacy_act = legacy_acts.get(key, {"name": act["name"], "description": ""})
-                shows = legacy_act.get("shows", [])
+                shows = []
+                legacy_act["shows"] = shows
                 timeline: list[dict[str]] = act["timeline"]
                 for event in timeline:
                     if event["type"] == "Showtime":
@@ -289,7 +290,6 @@ def create_app(instance_path=DEFAULT_INSTANCE_PATH,
                         show["day"] = LEGACY_DAYS[festival_weekday(start)]
 
                         shows.append(show)
-                legacy_act["shows"] = shows
 
                 if stage is None or any(show["stage"] == stage for show in shows):
                     legacy_acts[key] = legacy_act
