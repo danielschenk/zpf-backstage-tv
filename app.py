@@ -341,19 +341,26 @@ def create_app(instance_path=DEFAULT_INSTANCE_PATH,
         }
         return Response(cal.to_ical(), headers=headers, mimetype="text/calendar")
 
+    LEGACY_ITINERARY_KEYS = {
+        "Get in": "get_in",
+        "Soundcheck": "soundcheck",
+        "Linecheck": "linecheck",
+    }
+
     @app.route("/itinerary/<act_key>", methods=["GET"])
     def serve_dressing_room(act_key):
-        global itinerary
-        global itinerary_lock
-        with itinerary_lock:
-            if act_key not in itinerary:
-                return Response("Act does not exist", status=404)
+        itinerary = make_legacy_itinerary()
+        if act_key not in itinerary:
+            return Response("Act does not exist", status=404)
 
-            return jsonify(itinerary[act_key])
+        return jsonify(itinerary[act_key])
 
     @app.route("/itinerary/<act_key>/<item>", methods=["PUT"])
     @login_required
     def update_dressing_room(act_key, item):
+        if item != "dressing_room":
+            return Response("everything except dressing_room is read-only", status=405)
+
         global itinerary
         global itinerary_lock
         with itinerary_lock:
@@ -365,10 +372,25 @@ def create_app(instance_path=DEFAULT_INSTANCE_PATH,
 
     @app.route("/itinerary")
     def serve_dressing_rooms():
+        return make_legacy_itinerary()
+
+    def make_legacy_itinerary():
         global itinerary
         global itinerary_lock
-        with itinerary_lock:
-            return jsonify(itinerary)
+        global acts
+        global acts_lock
+        with itinerary_lock, acts_lock:
+            full_itinerary = itinerary.copy()
+
+            for act in acts:
+                key = str(act["id"])
+                itin_item = full_itinerary.get(key, {})
+                for event in act["timeline"]:
+                    eventtype = event["type"]
+                    if eventtype in LEGACY_ITINERARY_KEYS:
+                        itin_item[LEGACY_ITINERARY_KEYS[eventtype]] = act_datestr_to_legacy_time(event["start"])
+
+        return full_itinerary
 
     @login_manager.user_loader
     def load_user(user_id):
