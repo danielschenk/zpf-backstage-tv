@@ -36,13 +36,24 @@ programme = {
 }
 programme_lock = threading.Lock()
 
-acts = {}
+acts: list[dict[str]] = []
 acts_lock = threading.Lock()
 
-itinerary = {}
+itinerary: dict[str, str] = {}
 itinerary_lock = threading.Lock()
 
 scheduler = BackgroundScheduler()
+
+# from datetime int to dutch
+LEGACY_DAYS = {
+    0: "maandag",
+    1: "dinsdag",
+    2: "woensdag",
+    3: "donderdag",
+    4: "vrijdag",
+    5: "zaterdag",
+    6: "zondag",
+}
 
 
 def get_resource(url, session):
@@ -248,11 +259,42 @@ def create_app(instance_path=DEFAULT_INSTANCE_PATH,
 
     @app.route("/programme")
     def serve_programme():
+        programme = make_legacy_programme("AMIGO")
+        response = make_response(programme)
+        return response
+
+    def make_legacy_programme(stage=None):
+        global acts
+        global acts_lock
         global programme
         global programme_lock
-        with programme_lock:
-            response = make_response(jsonify(programme))
-        return response
+        with acts_lock, programme_lock:
+            legacy_programme = programme.copy()
+            legacy_acts = legacy_programme["acts"]
+            for act in acts:
+                key = str(act["id"])
+                legacy_act = legacy_acts.get(key, {"name": act["name"], "description": ""})
+                shows = legacy_act.get("shows", [])
+                timeline: list[dict[str]] = act["timeline"]
+                for event in timeline:
+                    if event["type"] == "Showtime":
+                        event_stage = event["stage"]
+                        show = {"stage": event_stage.upper() if event_stage is not None else None}
+                        times = act_event_to_legacy_times(event)
+                        show["start"] = times[0]
+                        show["end"] = times[1]
+                        # these are only used for animations in JS, fix later
+                        show["start_utc"] = show["end_utc"] = 0
+                        start = act_datestr_to_datetime(event["start"])
+                        show["day"] = LEGACY_DAYS[festival_weekday(start)]
+
+                        shows.append(show)
+                legacy_act["shows"] = shows
+
+                if stage is None or any(show["stage"] == stage for show in shows):
+                    legacy_acts[key] = legacy_act
+
+        return legacy_programme
 
     @app.route("/generate-ical-url")
     def serve_ical_ui():
@@ -417,21 +459,19 @@ def hour_minute(time: str):
     return int(time[0:2]), int(time[3:5])
 
 
-def add_show_timestamps(acts: Mapping):
-    year = datetime.datetime.now().year
-    for act in acts.values():
-        for show in act["shows"]:
-            start_day = end_day = show["day_of_month"]
-            # in programme, past-midnight shows show same day
-            # but in real time it is the next
-            if show["start"].startswith("0"):
-                start_day += 1
-            if show["end"].startswith("0"):
-                end_day += 1
-            hour, minute = hour_minute(show["start"])
-            start = datetime.datetime(year, 8, start_day, hour, minute)
-            hour, minute = hour_minute(show["end"])
-            end = datetime.datetime(year, 8, end_day, hour, minute)
+def act_event_to_legacy_times(event: dict[str, str]):
+    return act_datestr_to_legacy_time(event["start"]), act_datestr_to_legacy_time(event["end"])
 
-            show["start_utc"] = int(start.timestamp())
-            show["end_utc"] = int(end.timestamp())
+
+def act_datestr_to_legacy_time(datestr: str):
+    return datestr[11:16]
+
+
+def act_datestr_to_datetime(datestr: str):
+    return datetime.datetime.strptime(datestr + " +0200", "%Y-%m-%d %H:%M:%S %z")
+
+
+def festival_weekday(timepoint: datetime.datetime):
+    """Returns the `datetime` day of week for a timepoint, assuming 06:00 for start of new day"""
+    shifted_timestamp = timepoint.timestamp() - 6 * 3600
+    return datetime.datetime.fromtimestamp(shifted_timestamp).weekday()
