@@ -280,7 +280,6 @@ def create_app(instance_path=DEFAULT_INSTANCE_PATH,
                         times = act_event_to_legacy_times(event)
                         show["start"] = times[0]
                         show["end"] = times[1]
-                        # these are only used for animations in JS, fix later
                         start = act_datestr_to_datetime(event["start"])
                         end = act_datestr_to_datetime(event["end"])
                         show["start_utc"] = int(start.timestamp())
