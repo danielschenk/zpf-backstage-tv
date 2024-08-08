@@ -247,11 +247,7 @@ def create_app(instance_path=DEFAULT_INSTANCE_PATH,
 
         dev_mode_display = "block" if "devMode" in request.args else "none"
 
-        free_fields = [
-            ItineraryField("get_in", "Get-in", "time"),
-            ItineraryField("soundcheck", "Soundcheck", "time"),
-            ItineraryField("linecheck", "Linecheck", "time"),
-        ]
+        free_fields = []
         return render_template("index.html", acts_by_day=acts_by_day,
                                dev_mode_display=dev_mode_display,
                                version=get_version(), fetch=fetch_time,
@@ -285,8 +281,10 @@ def create_app(instance_path=DEFAULT_INSTANCE_PATH,
                         show["start"] = times[0]
                         show["end"] = times[1]
                         # these are only used for animations in JS, fix later
-                        show["start_utc"] = show["end_utc"] = 0
                         start = act_datestr_to_datetime(event["start"])
+                        end = act_datestr_to_datetime(event["end"])
+                        show["start_utc"] = int(start.timestamp())
+                        show["end_utc"] = int(end.timestamp())
                         show["day"] = LEGACY_DAYS[festival_weekday(start)]
 
                         shows.append(show)
