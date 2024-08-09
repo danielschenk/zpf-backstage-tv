@@ -14,6 +14,7 @@ from dataclasses import dataclass
 import uuid
 from urllib.parse import urlparse, urljoin
 import logging
+from difflib import SequenceMatcher
 import flask
 from flask import Flask, render_template, jsonify, make_response, request, Response
 from flask_login import LoginManager, login_user, login_required
@@ -122,8 +123,14 @@ def create_app(instance_path=DEFAULT_INSTANCE_PATH,
     Bootstrap(app)
 
     def persist_itinerary(itinerary):
-        with app.open_instance_resource("itinerary.json", "w+") as f:
-            json.dump(itinerary, f, indent=2)
+        persist_data(itinerary, "itinerary")
+
+    def persist_programme(programme):
+        persist_data(programme, "programme_cache")
+
+    def persist_data(data, name):
+        with app.open_instance_resource(f"{name}.json", "w+") as f:
+            json.dump(data, f, indent=2)
 
     def initialize_nonexistent_act_itineraries(acts):
         global itinerary
@@ -135,10 +142,11 @@ def create_app(instance_path=DEFAULT_INSTANCE_PATH,
                     itinerary[key] = {"dressing_room": "None"}
             persist_itinerary(itinerary)
 
-    def update_programme_cache():
+    def update_acts():
         config = app.config
         session = requests.Session()
         session.auth = requests.auth.HTTPBasicAuth(config["ACTS_USERNAME"], config["ACTS_PASSWORD"])
+        logger.info("getting acts...")
         response = session.get(config["ACTS_URL"])
         response.raise_for_status()
         global acts
@@ -151,18 +159,58 @@ def create_app(instance_path=DEFAULT_INSTANCE_PATH,
 
         initialize_nonexistent_act_itineraries(acts_temp)
 
+    def update_act_descriptions():
+        website = zpfwebsite.website.Website()
+        website_acts = website.get_acts("amigo")
+
+        global acts
+        global acts_lock
+        with acts_lock:
+            acts_copy = acts.copy()
+
+        descriptions = {}
+        for act in acts_copy:
+            if not any(event["stage"] == "Amigo" for event in act["timeline"]):
+                continue
+            name = act["name"].split(" @ Vrienden")[0].strip()
+            for website_act in website_acts:
+                website_act["ratio"] = SequenceMatcher(None, name.lower(), website_act["name"].lower()).ratio()
+            best = max(website_acts, key=lambda x: x["ratio"])
+            if best["ratio"] < 0.8:
+                logger.error(f"could not match '{name}' to any of website's acts")
+                continue
+
+            key = str(act["id"])
+            try:
+                descriptions[key] = website.get_description(best["url"])
+            except (zpfwebsite.errors.ZpfWebsiteError, requests.HTTPError) as e:
+                logger.error(f"could not get description: {e}")
+                sentry_sdk.capture_exception(e)
+                descriptions[key] = "Sorry, we konden de beschrijving niet ophalen. :-(\n Laat je verrassen!"
+
+        global programme
+        global programme_lock
+        with programme_lock:
+            programme_acts = programme.get("acts", {})
+            for key, description in descriptions.items():
+                if key not in programme_acts:
+                    programme_acts[key] = {}
+                programme_acts[key]["description"] = description
+            persist_programme(programme)
+
     fetch_now = False
     try:
         global programme
         with app.open_instance_resource("programme_cache.json", "r") as f:
             logger.info("found programme cache on disk")
-            programme = json.load(f)
+            programme_temp = json.load(f)
             try:
                 major, minor = programme["schema_version"].split(".")
                 if int(major) < 1:
                     raise IncompatibleCacheError()
             except KeyError:
                 raise IncompatibleCacheError()
+            programme = programme_temp
     except (FileNotFoundError, IncompatibleCacheError):
         logger.warning("no programme cache on disk or incompatible, need initial fetch")
         fetch_now = True
@@ -178,9 +226,15 @@ def create_app(instance_path=DEFAULT_INSTANCE_PATH,
 
     if fetch_now:
         try:
-            update_programme_cache()
+            update_acts()
         except Exception as e:
-            logger.error(e)
+            logger.error(f"failed to get acts: {e}")
+            sentry_sdk.capture_exception(e)
+
+        try:
+            update_act_descriptions()
+        except Exception as e:
+            logger.error(f"failed to get acts: {e}")
             sentry_sdk.capture_exception(e)
 
     try:
@@ -194,7 +248,8 @@ def create_app(instance_path=DEFAULT_INSTANCE_PATH,
     initialize_nonexistent_act_itineraries(acts)
 
     if app.config["UPDATE_PROGRAMME"]:
-        scheduler.add_job(update_programme_cache, "interval", minutes=30)
+        scheduler.add_job(update_acts, "interval", minutes=10)
+        scheduler.add_job(update_act_descriptions, "interval", minutes=60)
         scheduler.start()
 
     @app.route("/")
