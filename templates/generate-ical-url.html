@@ -50,5 +50,9 @@
     <p id="url" class="code"></p>
     <button onclick="copy()"><span class="material-symbols-outlined">content_copy</span> Copy</button>
 
+    <div class="centered">
+        <img src="{{ url_for('static', filename='logo.png') }}", width="500"/>
+    </div>
+
     <script src="{{ url_for('static', filename="generate-ical-url.js") }}"></script>
 </body>
