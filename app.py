@@ -170,8 +170,10 @@ def create_app(instance_path=DEFAULT_INSTANCE_PATH,
 
         descriptions = {}
         for act in acts_copy:
+            key = str(act["id"])
             if not any(event["stage"] == "Amigo" for event in act["timeline"]):
                 continue
+            descriptions[key] = "Sorry, we konden de beschrijving niet ophalen. :-(\n Laat je verrassen!"
             name = act["name"].split(" @ Vrienden")[0].strip()
             for website_act in website_acts:
                 website_act["ratio"] = SequenceMatcher(None, name.lower(), website_act["name"].lower()).ratio()
@@ -180,13 +182,11 @@ def create_app(instance_path=DEFAULT_INSTANCE_PATH,
                 logger.error(f"could not match '{name}' to any of website's acts")
                 continue
 
-            key = str(act["id"])
             try:
                 descriptions[key] = website.get_description(best["url"])
             except (zpfwebsite.errors.ZpfWebsiteError, requests.HTTPError) as e:
                 logger.error(f"could not get description: {e}")
                 sentry_sdk.capture_exception(e)
-                descriptions[key] = "Sorry, we konden de beschrijving niet ophalen. :-(\n Laat je verrassen!"
 
         global programme
         global programme_lock
@@ -324,7 +324,8 @@ def create_app(instance_path=DEFAULT_INSTANCE_PATH,
             legacy_acts = legacy_programme["acts"]
             for act in acts:
                 key = str(act["id"])
-                legacy_act = legacy_acts.get(key, {"name": act["name"], "description": ""})
+                legacy_act = legacy_acts.get(key, {})
+                legacy_act["name"] = act["name"]
                 shows = []
                 legacy_act["shows"] = shows
                 timeline: list[dict[str]] = act["timeline"]
@@ -359,37 +360,34 @@ def create_app(instance_path=DEFAULT_INSTANCE_PATH,
         cal.add("VERSION", "2.0")
         hostname = urlparse(request.base_url).hostname
         days = request.args.get("days", "donderdag;vrijdag;zaterdag;zondag").split(";")
-        global programme
-        global programme_lock
-        global itinerary
-        global itinerary_lock
-        with programme_lock, itinerary_lock:
-            for key, act in programme["acts"].items():
-                for show in act["shows"]:
-                    if show["day"] not in days:
+        programme = make_legacy_programme("AMIGO")
+        itinerary = make_legacy_itinerary()
+        for key, act in programme["acts"].items():
+            for show in act["shows"]:
+                if show["day"] not in days:
+                    continue
+                event = create_ical_event(key, act, show, itinerary, hostname)
+
+                reminders = []
+                for value in request.args.get("reminders", "").split(";"):
+                    if not value:
                         continue
-                    event = create_ical_event(key, act, show, itinerary, hostname)
+                    try:
+                        reminders.append(ReminderDefinition.from_urlparam(value))
+                    except ValueError:
+                        return Response(f"Error in reminder definition: '{value}'", status=400)
+                if not reminders:
+                    reminders.append(ReminderDefinition("start_utc", -6))
+                    reminders.append(ReminderDefinition("end_utc", -6))
 
-                    reminders = []
-                    for value in request.args.get("reminders", "").split(";"):
-                        if not value:
-                            continue
-                        try:
-                            reminders.append(ReminderDefinition.from_urlparam(value))
-                        except ValueError:
-                            return Response(f"Error in reminder definition: '{value}'", status=400)
-                    if not reminders:
-                        reminders.append(ReminderDefinition("start_utc", -6))
-                        reminders.append(ReminderDefinition("end_utc", -6))
+                if int(request.args.get("enable_reminders", 1)):
+                    try:
+                        add_ical_reminders(show, event, reminders)
+                    except KeyError as e:
+                        return Response(
+                            f"Timestamp key '{e.args[0]}' doesn't exist", status=400)
 
-                    if int(request.args.get("enable_reminders", 1)):
-                        try:
-                            add_ical_reminders(show, event, reminders)
-                        except KeyError as e:
-                            return Response(
-                                f"Timestamp key '{e.args[0]}' doesn't exist", status=400)
-
-                    cal.add_component(event)
+                cal.add_component(event)
 
         headers = {
             "Cache-Control": "no-cache, no-store",
@@ -493,10 +491,10 @@ def create_ical_event(key, act, show, itinerary, hostname):
     event_uid = f"{key}-{start_utc}"
     event.add("UID", f"{event_uid}@{hostname}")
     event.add("SUMMARY", act["name"])
-    event.add("DESCRIPTION", f"{act['description']}\n\n{act['url']}")
+    event.add("DESCRIPTION", f"{act['description']}")
     dressing_room = itinerary[key].get("dressing_room", None)
     if dressing_room is not None and dressing_room != "None":
-        location = f"DR {dressing_room} ({show['stage']})"
+        location = f"Dressing room {dressing_room} ({show['stage']})"
     else:
         location = show["stage"]
     event.add("LOCATION", location)
