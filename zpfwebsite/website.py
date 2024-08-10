@@ -33,6 +33,7 @@ class Website:
         self._logger.info(f"fetching {url}...")
         resp = self.session.get(url)
         resp.raise_for_status()
+        resp.encoding = "utf-8"
         soup = bs4.BeautifulSoup(resp.text, features=self._BS4_FEATURES)
         links = soup.find_all("a", href=re.compile("/programma/[^/]+/?$"))
         if not any(links):
