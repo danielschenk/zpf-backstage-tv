@@ -63,9 +63,7 @@ class Website:
         resp.raise_for_status()
         resp.encoding = "utf-8"
         soup = bs4.BeautifulSoup(resp.text, features=self._BS4_FEATURES)
-        try:
-            paragraph = soup.find("section", class_="prose").find("p")
-            return re.sub("<[^<]+?>", "", paragraph.text)
-        except Exception as e:
-            self._logger.error(f"unable to find description: {e}")
-            raise errors.ZpfWebsiteError("unable to find description") from e
+        prose_section = soup.find("section", class_="prose")
+        if prose_section is None:
+            raise errors.ZpfWebsiteError("unable to find prose section")
+        return prose_section.get_text("\n")
