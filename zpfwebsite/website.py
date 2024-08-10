@@ -4,11 +4,7 @@ import logging
 import requests
 from cachecontrol import CacheControl
 from cachecontrol.caches.file_cache import FileCache
-import calendar
-from cachecontrol.heuristics import BaseHeuristic
-from datetime import datetime, timedelta
 import re
-from email.utils import parsedate, formatdate
 import bs4
 import sentry_sdk
 
@@ -21,18 +17,16 @@ class Website:
     PROGRAMME_SCHEMA_VERSION = "1.0"
     _BS4_FEATURES = "html.parser"
 
-    def __init__(self, force_cache=False) -> None:
+    def __init__(self) -> None:
         home = pathlib.Path(os.path.expanduser("~"))
-        cache_dir = "requests-cache-dev" if force_cache else "requests_cache"
+        cache_dir = "requests_cache"
         cache_path = home / ".python-zpfwebsite" / cache_dir
         self._logger = logging.getLogger(__class__.__name__)
         self._logger.debug(f"storing requests cache in: {cache_path}")
         cache_path.mkdir(parents=True, exist_ok=True)
 
-        heuristic = _DaysHeuristic(7) if force_cache else None
         self.session = CacheControl(requests.Session(),
-                                    cache=FileCache(cache_path),
-                                    heuristic=heuristic)
+                                    cache=FileCache(cache_path))
 
     def get_acts(self, stage):
         url = f"{self.PROGRAMME_BASE_URL}/locaties/{stage.lower()}"
@@ -74,25 +68,3 @@ class Website:
         except Exception as e:
             self._logger.error(f"unable to find description: {e}")
             raise errors.ZpfWebsiteError("unable to find description") from e
-
-
-# Modified example from cachecontrol documentation
-class _DaysHeuristic(BaseHeuristic):
-    def __init__(self, days) -> None:
-        super().__init__()
-        self._days = days
-
-    def update_headers(self, response):
-        if 'date' in response.headers:
-            date = parsedate(response.headers['date'])
-        else:
-            date = datetime.now().timetuple()
-        expires = datetime(*date[:6]) + timedelta(days=self._days)
-        return {
-            'expires' : formatdate(calendar.timegm(expires.timetuple())),
-            'cache-control' : 'public',
-        }
-
-    def warning(self, response):
-        msg = 'Automatically cached! Response is Stale.'
-        return '110 - "%s"' % msg

@@ -15,6 +15,7 @@ import app as flask_app
 TEST_DIR = pathlib.Path(__file__).parent
 INSTANCE_DIR = TEST_DIR / "instance"
 
+
 class SessionWithBaseUrl(requests.Session):
     def __init__(self, base_url):
         super().__init__()
