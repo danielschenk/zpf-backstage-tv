@@ -7,13 +7,14 @@ import json
 import datetime
 import subprocess
 import pathlib
-from typing import Mapping, OrderedDict
+from typing import OrderedDict
 from functools import cmp_to_key
 import os
 from dataclasses import dataclass
 import uuid
 from urllib.parse import urlparse, urljoin
 import logging
+import threading
 from difflib import SequenceMatcher
 import flask
 from flask import Flask, render_template, jsonify, make_response, request, Response
@@ -105,6 +106,7 @@ def create_app(instance_path=DEFAULT_INSTANCE_PATH,
     app.config.from_pyfile(config_filename, silent=True)
 
     logging.basicConfig(format="%(asctime)s - %(name)10s - %(levelname)7s - %(message)s")
+    logging.getLogger().setLevel(app.config.get("LOG_LEVEL", "WARN"))
     logger = logging.getLogger("app")
 
     dsn = app.config["SENTRY_DSN"]
@@ -129,8 +131,21 @@ def create_app(instance_path=DEFAULT_INSTANCE_PATH,
         persist_data(programme, "programme_cache")
 
     def persist_data(data, name):
-        with app.open_instance_resource(f"{name}.json", "w+") as f:
-            json.dump(data, f, indent=2)
+        write_if_needed(f"{name}.json", json.dumps(data, indent=2))
+
+    def write_if_needed(filename, new_contents, binary=False):
+        optional_b = "b" if binary else ""
+        try:
+            with app.open_instance_resource(filename, f"r{optional_b}") as f:
+                if new_contents == f.read():
+                    logger.debug(f"contents of {filename} unchanged, skipping write")
+                    return
+        except FileNotFoundError:
+            logger.debug(f"creating {filename}")
+
+        logger.debug(f"writing {filename}")
+        with app.open_instance_resource(filename, f"w{optional_b}+") as f:
+            f.write(new_contents)
 
     def initialize_nonexistent_act_itineraries(acts):
         global itinerary
@@ -154,8 +169,7 @@ def create_app(instance_path=DEFAULT_INSTANCE_PATH,
         acts_temp = response.json()
         with acts_lock:
             acts = acts_temp
-        with app.open_instance_resource("acts.json", "wb+") as f:
-            f.write(response.content)
+        write_if_needed("acts.json", response.content, binary=True)
 
         initialize_nonexistent_act_itineraries(acts_temp)
 
@@ -198,7 +212,6 @@ def create_app(instance_path=DEFAULT_INSTANCE_PATH,
                 programme_acts[key]["description"] = description
             persist_programme(programme)
 
-    fetch_now = False
     try:
         global programme
         with app.open_instance_resource("programme_cache.json", "r") as f:
@@ -213,7 +226,6 @@ def create_app(instance_path=DEFAULT_INSTANCE_PATH,
             programme = programme_temp
     except (FileNotFoundError, IncompatibleCacheError):
         logger.warning("no programme cache on disk or incompatible, need initial fetch")
-        fetch_now = True
 
     try:
         global acts
@@ -222,20 +234,6 @@ def create_app(instance_path=DEFAULT_INSTANCE_PATH,
             acts = json.load(f)
     except FileNotFoundError:
         logger.warning("no acts on disk, need initial fetch")
-        fetch_now = True
-
-    if fetch_now:
-        try:
-            update_acts()
-        except Exception as e:
-            logger.error(f"failed to get acts: {e}")
-            sentry_sdk.capture_exception(e)
-
-        try:
-            update_act_descriptions()
-        except Exception as e:
-            logger.error(f"failed to get acts: {e}")
-            sentry_sdk.capture_exception(e)
 
     try:
         global itinerary
@@ -245,9 +243,19 @@ def create_app(instance_path=DEFAULT_INSTANCE_PATH,
     except FileNotFoundError:
         logger.warning("no itinerary on disk")
 
-    initialize_nonexistent_act_itineraries(acts)
-
     if app.config["UPDATE_PROGRAMME"]:
+        # make sure we always do one at startup, but don't block server
+        def do_initial_fetch():
+            update_acts()
+            update_act_descriptions()
+            global acts
+            global acts_lock
+            with acts_lock:
+                initialize_nonexistent_act_itineraries(acts)
+
+        t = threading.Thread(name="initial_fetch", target=do_initial_fetch, daemon=True)
+        t.start()
+
         scheduler.add_job(update_acts, "interval", minutes=10)
         scheduler.add_job(update_act_descriptions, "interval", minutes=60)
         scheduler.start()
