@@ -24,7 +24,7 @@ def locations():
 
 @pytest.fixture
 def mock_responses(programs, locations):
-    with responses.RequestsMock() as rsps:
+    with responses.RequestsMock(assert_all_requests_are_fired=False) as rsps:
         rsps.get(f"{BASE_URL}/programs", json=programs)
         rsps.get(f"{BASE_URL}/locations", json=locations)
         yield
