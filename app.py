@@ -7,14 +7,13 @@ import json
 import datetime
 import subprocess
 import pathlib
-from typing import OrderedDict
+from typing import OrderedDict, Any
 from functools import cmp_to_key
 import os
 from dataclasses import dataclass
 import uuid
 from urllib.parse import urlparse, urljoin
 import logging
-import threading
 from difflib import SequenceMatcher
 import flask
 from flask import Flask, render_template, jsonify, make_response, request, Response
@@ -35,10 +34,10 @@ DEFAULT_INSTANCE_PATH = APP_DIR / "instance"
 programme = {"schema_version": "1.0", "acts": {}}
 programme_lock = threading.Lock()
 
-acts: list[dict[str]] = []
+acts: list[dict[str, Any]] = []
 acts_lock = threading.Lock()
 
-itinerary: dict[str, str] = {}
+itinerary: dict[str, dict] = {}
 itinerary_lock = threading.Lock()
 
 scheduler = BackgroundScheduler()
@@ -97,7 +96,7 @@ class ItineraryField:
 def create_app(
     instance_path=DEFAULT_INSTANCE_PATH, config_filename=DEFAULT_INSTANCE_PATH / "settings.py"
 ):
-    app = Flask(__name__, instance_path=instance_path)
+    app = Flask(__name__, instance_path=str(instance_path))
 
     app.config.from_object("src.default_settings")
     app.config.from_pyfile(config_filename, silent=True)
@@ -275,7 +274,7 @@ def create_app(
         for day in ("woensdag", "donderdag", "vrijdag", "zaterdag", "zondag"):
             acts_by_day[day] = {}
 
-        def compare_show_times(act1, act2):
+        def compare_show_times(act1: list[dict[str, Any]], act2: list[dict[str, Any]]) -> int:
             """Compare show times, assuming next day at 06:00 instead of midnight"""
             start1 = act1[1]["shows"][0]["start"]
             start2 = act2[1]["shows"][0]["start"]
@@ -290,7 +289,7 @@ def create_app(
                     # but still same evening)
                     return 1
                 return -1
-            elif start1 > start2:
+            else:
                 if start1 >= next_festival_day and start2 < next_festival_day:
                     # lesser than (because one show is past midnight,
                     # but still same evening)
@@ -344,7 +343,7 @@ def create_app(
                 legacy_act["name"] = act["name"]
                 shows = []
                 legacy_act["shows"] = shows
-                timeline: list[dict[str]] = act["timeline"]
+                timeline: list[dict[str, Any]] = act["timeline"]
                 for event in timeline:
                     if event["type"] == "Showtime":
                         event_stage = event["stage"]
