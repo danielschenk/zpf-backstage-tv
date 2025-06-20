@@ -14,7 +14,7 @@ class Api:
 
     def get_programs(self, location_name: str | None = None) -> list[dict[str, Any]]:
         """Get programs, optionally filtered by stage name."""
-        logging.info("Fetching programs")
+        self._logger.info("Fetching programs")
         response = self._session.get(f"{self.base_url}/programs")
         response.raise_for_status()
         programs = response.json()
@@ -35,7 +35,7 @@ class Api:
         edition. If you want to force a refresh, set `force=True`.
         """
         if self._locations_cache is None or force:
-            logging.info("Fetching locations")
+            self._logger.info("Fetching locations")
             response = self._session.get(f"{self.base_url}/locations")
             response.raise_for_status()
             self._locations_cache = response.json()
