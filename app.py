@@ -26,7 +26,7 @@ import icalendar
 import requests.auth
 import sentry_sdk
 
-import zpfwebsite.errors
+import zpfwebsite
 
 
 APP_DIR = pathlib.Path(__file__).parent
@@ -121,6 +121,8 @@ def create_app(
     login_manager.init_app(app)
     Bootstrap(app)
 
+    api = zpfwebsite.Api(app.config["ZPF_API_URL"] if app.config["UPDATE_PROGRAMME"] else "")
+
     def persist_itinerary(itinerary):
         persist_data(itinerary, "itinerary")
 
@@ -171,37 +173,39 @@ def create_app(
         initialize_nonexistent_act_itineraries(acts_temp)
 
     def update_act_descriptions():
-        website = zpfwebsite.website.Website()
-        website_acts = website.get_acts("amigo")
+        try:
+            website_acts = api.get_programs("Amigo")
+        except Exception as e:
+            logger.error(f"could not get acts from website: {e}")
+            sentry_sdk.capture_exception(e)
+            website_acts = None
 
         global acts
         global acts_lock
         with acts_lock:
             acts_copy = acts.copy()
 
+        fallback = "Sorry, we konden de beschrijving niet ophalen. :-(\n Laat je verrassen!"
         descriptions = {}
         for act in acts_copy:
             key = str(act["id"])
             if not any(event["stage"] == "Amigo" for event in act["timeline"]):
                 continue
-            descriptions[key] = (
-                "Sorry, we konden de beschrijving niet ophalen. :-(\n Laat je verrassen!"
-            )
+            if website_acts is None:
+                descriptions[key] = fallback
+                continue
+
             name = act["name"].split(" @ Vrienden")[0].strip()
             for website_act in website_acts:
                 website_act["ratio"] = SequenceMatcher(
-                    None, name.lower(), website_act["name"].lower()
+                    None, name.lower(), website_act["title"].lower()
                 ).ratio()
             best = max(website_acts, key=lambda x: x["ratio"])
             if best["ratio"] < 0.8:
                 logger.error(f"could not match '{name}' to any of website's acts")
                 continue
 
-            try:
-                descriptions[key] = website.get_description(best["url"])
-            except (zpfwebsite.errors.ZpfWebsiteError, requests.HTTPError) as e:
-                logger.error(f"could not get description: {e}")
-                sentry_sdk.capture_exception(e)
+            descriptions[key] = best["description"]
 
         global programme
         global programme_lock
