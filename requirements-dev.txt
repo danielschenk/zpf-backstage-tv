@@ -1,4 +1,4 @@
 -r requirements.txt
 pytest~=8.1.1
-beautifulsoup4~=4.12.2
+beautifulsoup4~=4.13.4
 responses~=0.25.7
