@@ -24,6 +24,7 @@ from apscheduler.schedulers.background import BackgroundScheduler
 import icalendar
 import requests.auth
 import sentry_sdk
+import bs4
 
 import zpfwebsite
 
@@ -171,6 +172,14 @@ def create_app(
 
         initialize_nonexistent_act_itineraries(acts_temp)
 
+    def _html_description_to_text(html_description: str) -> str:
+        # ensure we keep separation between paragraphs
+        html_description = html_description.replace("<p>", "\n\n")
+        # remove remaining tags
+        # use html.parser to not be dependant on lxml, which is harder to install for some targets,
+        # as it contains C code
+        return bs4.BeautifulSoup(html_description, "html.parser").get_text().strip()
+
     def update_act_descriptions():
         try:
             website_acts = api.get_programs("Amigo")
@@ -185,7 +194,7 @@ def create_app(
             acts_copy = acts.copy()
 
         fallback = "Sorry, we konden de beschrijving niet ophalen. :-(\n Laat je verrassen!"
-        descriptions = {}
+        descriptions: dict[str, str] = {}
         for act in acts_copy:
             key = str(act["id"])
             if not any(event["stage"] == "Amigo" for event in act["timeline"]):
@@ -213,7 +222,10 @@ def create_app(
             for key, description in descriptions.items():
                 if key not in programme_acts:
                     programme_acts[key] = {}
-                programme_acts[key]["description"] = description
+                act = programme_acts[key]
+                act["description_html"] = description
+                act["description"] = _html_description_to_text(description)
+
             persist_programme(programme)
 
     try:

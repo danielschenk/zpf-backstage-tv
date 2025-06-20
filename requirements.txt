@@ -1,4 +1,5 @@
 requests~=2.31.0
+beautifulsoup4~=4.13.4
 filelock~=3.13.1
 apscheduler~=3.10.4
 flask~=3.0.2
