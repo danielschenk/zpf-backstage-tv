@@ -121,7 +121,7 @@ def create_app(
     login_manager.init_app(app)
     Bootstrap(app)
 
-    api = zpfwebsite.Api(app.config["ZPF_API_URL"])
+    api = zpfwebsite.Api(app.config["ZPF_API_URL"] if app.config["UPDATE_PROGRAMME"] else "")
 
     def persist_itinerary(itinerary):
         persist_data(itinerary, "itinerary")
