@@ -15,6 +15,7 @@ class TheUser(UserMixin):
     """Singleton user used for basic authentication.
 
     Username and password should be set via environment."""
+
     def __init__(self, username, password):
         super().__init__()
         self.username = username

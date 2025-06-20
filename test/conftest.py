@@ -52,11 +52,9 @@ def create_session(host):
         "csrf_token": csrf_input.attrs["value"],
         "username": "test",
         "password": "test",
-        "submit": "Submit"
+        "submit": "Submit",
     }
-    headers = {
-        "Upgrade-Insecure-Requests": "1"
-    }
+    headers = {"Upgrade-Insecure-Requests": "1"}
     response = session.post("/login", data=data, headers=headers)
     assert response.history[0].headers["Location"] == "/"
 
@@ -68,8 +66,9 @@ def app():
     # copy instance data to a tempdir, so that we always start app with same state
     with tempfile.TemporaryDirectory() as temp_instance:
         shutil.copytree(INSTANCE_DIR, temp_instance, dirs_exist_ok=True)
-        the_app = flask_app.create_app(instance_path=temp_instance,
-                                       config_filename=TEST_DIR / "settings.py")
+        the_app = flask_app.create_app(
+            instance_path=temp_instance, config_filename=TEST_DIR / "settings.py"
+        )
         process = multiprocessing.Process(target=the_app.run)
         process.start()
         yield
@@ -80,8 +79,9 @@ def app():
 @pytest.fixture
 def app_virgin():
     with tempfile.TemporaryDirectory() as temp_instance:
-        the_app = flask_app.create_app(instance_path=temp_instance,
-                                       config_filename=TEST_DIR / "settings.py")
+        the_app = flask_app.create_app(
+            instance_path=temp_instance, config_filename=TEST_DIR / "settings.py"
+        )
         process = multiprocessing.Process(target=the_app.run)
         process.start()
         yield

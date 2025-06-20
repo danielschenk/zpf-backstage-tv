@@ -32,10 +32,7 @@ import zpfwebsite.errors
 APP_DIR = pathlib.Path(__file__).parent
 DEFAULT_INSTANCE_PATH = APP_DIR / "instance"
 
-programme = {
-    "schema_version": "1.0",
-    "acts": {}
-}
+programme = {"schema_version": "1.0", "acts": {}}
 programme_lock = threading.Lock()
 
 acts: list[dict[str]] = []
@@ -83,8 +80,7 @@ def is_safe_url(target):
     """
     ref_url = urlparse(request.host_url)
     test_url = urlparse(urljoin(request.host_url, target))
-    return test_url.scheme in ('http', 'https') and \
-        ref_url.netloc == test_url.netloc
+    return test_url.scheme in ("http", "https") and ref_url.netloc == test_url.netloc
 
 
 class IncompatibleCacheError(RuntimeError):
@@ -98,8 +94,9 @@ class ItineraryField:
     type: str = "text"
 
 
-def create_app(instance_path=DEFAULT_INSTANCE_PATH,
-               config_filename=DEFAULT_INSTANCE_PATH / "settings.py"):
+def create_app(
+    instance_path=DEFAULT_INSTANCE_PATH, config_filename=DEFAULT_INSTANCE_PATH / "settings.py"
+):
     app = Flask(__name__, instance_path=instance_path)
 
     app.config.from_object("src.default_settings")
@@ -187,10 +184,14 @@ def create_app(instance_path=DEFAULT_INSTANCE_PATH,
             key = str(act["id"])
             if not any(event["stage"] == "Amigo" for event in act["timeline"]):
                 continue
-            descriptions[key] = "Sorry, we konden de beschrijving niet ophalen. :-(\n Laat je verrassen!"
+            descriptions[key] = (
+                "Sorry, we konden de beschrijving niet ophalen. :-(\n Laat je verrassen!"
+            )
             name = act["name"].split(" @ Vrienden")[0].strip()
             for website_act in website_acts:
-                website_act["ratio"] = SequenceMatcher(None, name.lower(), website_act["name"].lower()).ratio()
+                website_act["ratio"] = SequenceMatcher(
+                    None, name.lower(), website_act["name"].lower()
+                ).ratio()
             best = max(website_acts, key=lambda x: x["ratio"])
             if best["ratio"] < 0.8:
                 logger.error(f"could not match '{name}' to any of website's acts")
@@ -292,8 +293,7 @@ def create_app(instance_path=DEFAULT_INSTANCE_PATH,
                     return -1
                 return 1
 
-        acts = OrderedDict(sorted(programme["acts"].items(),
-                           key=cmp_to_key(compare_show_times)))
+        acts = OrderedDict(sorted(programme["acts"].items(), key=cmp_to_key(compare_show_times)))
 
         for key, act in acts.items():
             for show in act["shows"]:
@@ -311,10 +311,14 @@ def create_app(instance_path=DEFAULT_INSTANCE_PATH,
         dev_mode_display = "block" if "devMode" in request.args else "none"
 
         free_fields = []
-        return render_template("index.html", acts_by_day=acts_by_day,
-                               dev_mode_display=dev_mode_display,
-                               version=get_version(), fetch=fetch_time,
-                               free_fields=free_fields)
+        return render_template(
+            "index.html",
+            acts_by_day=acts_by_day,
+            dev_mode_display=dev_mode_display,
+            version=get_version(),
+            fetch=fetch_time,
+            free_fields=free_fields,
+        )
 
     @app.route("/programme")
     def serve_programme():
@@ -392,8 +396,7 @@ def create_app(instance_path=DEFAULT_INSTANCE_PATH,
                     try:
                         add_ical_reminders(show, event, reminders)
                     except KeyError as e:
-                        return Response(
-                            f"Timestamp key '{e.args[0]}' doesn't exist", status=400)
+                        return Response(f"Timestamp key '{e.args[0]}' doesn't exist", status=400)
 
                 cal.add_component(event)
 
@@ -449,7 +452,9 @@ def create_app(instance_path=DEFAULT_INSTANCE_PATH,
                 for event in act["timeline"]:
                     eventtype = event["type"]
                     if eventtype in LEGACY_ITINERARY_KEYS:
-                        itin_item[LEGACY_ITINERARY_KEYS[eventtype]] = act_datestr_to_legacy_time(event["start"])
+                        itin_item[LEGACY_ITINERARY_KEYS[eventtype]] = act_datestr_to_legacy_time(
+                            event["start"]
+                        )
 
         return full_itinerary
 
@@ -469,8 +474,10 @@ def create_app(instance_path=DEFAULT_INSTANCE_PATH,
         form = users.LoginForm()
         if form.validate_on_submit():
             user = users.TheUser(app.config["USERNAME"], app.config["PASSWORD"])
-            if request.form["username"] == user.username and \
-                    request.form["password"] == user.password:
+            if (
+                request.form["username"] == user.username
+                and request.form["password"] == user.password
+            ):
                 login_user(user, remember=True)
             else:
                 flask.flash("Login failed")

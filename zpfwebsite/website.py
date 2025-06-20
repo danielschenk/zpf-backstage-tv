@@ -25,8 +25,7 @@ class Website:
         self._logger.debug(f"storing requests cache in: {cache_path}")
         cache_path.mkdir(parents=True, exist_ok=True)
 
-        self.session = CacheControl(requests.Session(),
-                                    cache=FileCache(cache_path))
+        self.session = CacheControl(requests.Session(), cache=FileCache(cache_path))
 
     def get_acts(self, stage):
         url = f"{self.PROGRAMME_BASE_URL}/locaties/{stage.lower()}"

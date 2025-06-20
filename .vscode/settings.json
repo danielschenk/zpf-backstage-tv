@@ -4,10 +4,14 @@
     "python.testing.pytestArgs": [
         "test"
     ],
+    "[python]": {
+        "editor.defaultFormatter": "ms-python.black-formatter"
+    },
     "files.associations": {
         "*.html": "jinja-html"
     },
     "editor.rulers": [
         100
-    ]
+    ],
+    "files.insertFinalNewline": true
 }
