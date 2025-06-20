@@ -4,6 +4,7 @@
     "python.testing.pytestArgs": [
         "test"
     ],
+    "python.analysis.typeCheckingMode": "standard",
     "[python]": {
         "editor.defaultFormatter": "ms-python.black-formatter"
     },
