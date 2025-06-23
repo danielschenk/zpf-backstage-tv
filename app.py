@@ -286,10 +286,17 @@ def create_app(
         for day in ("woensdag", "donderdag", "vrijdag", "zaterdag", "zondag"):
             acts_by_day[day] = {}
 
-        def compare_show_times(act1: list[dict[str, Any]], act2: list[dict[str, Any]]) -> int:
+        def compare_show_times(
+            act1: tuple[str, dict[str, Any]], act2: tuple[str, dict[str, Any]]
+        ) -> int:
             """Compare show times, assuming next day at 06:00 instead of midnight"""
-            start1 = act1[1]["shows"][0]["start"]
-            start2 = act2[1]["shows"][0]["start"]
+            act1_shows = act1[1]["shows"]
+            act2_shows = act2[1]["shows"]
+            if not act1_shows or not act2_shows:
+                return 0
+
+            start1 = act1_shows[0]["start"]
+            start2 = act2_shows[0]["start"]
 
             if start1 == start2:
                 return 0
