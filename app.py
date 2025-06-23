@@ -193,11 +193,11 @@ def create_app(
         with acts_lock:
             acts_copy = acts.copy()
 
-        fallback = "Sorry, we konden de beschrijving niet ophalen. :-(\n Laat je verrassen!"
-        descriptions: dict[str, str] = {}
+        descriptions: dict[str, str | None] = {}
         for act in acts_copy:
             key = str(act["id"])
-            descriptions[key] = fallback
+            if key not in descriptions:
+                descriptions[key] = None
             if not any(event["stage"] == "Amigo" for event in act["timeline"]):
                 continue
             if website_acts is None:
@@ -224,7 +224,6 @@ def create_app(
                     programme_acts[key] = {}
                 act = programme_acts[key]
                 act["description_html"] = description
-                act["description"] = _html_description_to_text(description)
 
             persist_programme(programme)
 
@@ -353,9 +352,17 @@ def create_app(
         global acts_lock
         global programme
         global programme_lock
+
+        fallback = "Sorry, we konden de beschrijving niet ophalen. :-(\n Laat je verrassen!"
         with acts_lock, programme_lock:
             legacy_programme = programme.copy()
             legacy_acts = legacy_programme["acts"]
+            for legacy_act in legacy_acts.values():
+                if legacy_act["description_html"] is None:
+                    legacy_act["description_html"] = fallback
+                legacy_act["description"] = _html_description_to_text(
+                    legacy_act["description_html"]
+                )
             for act in acts:
                 key = str(act["id"])
                 legacy_act = legacy_acts.get(key, {})
