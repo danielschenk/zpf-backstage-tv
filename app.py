@@ -197,10 +197,10 @@ def create_app(
         descriptions: dict[str, str] = {}
         for act in acts_copy:
             key = str(act["id"])
+            descriptions[key] = fallback
             if not any(event["stage"] == "Amigo" for event in act["timeline"]):
                 continue
             if website_acts is None:
-                descriptions[key] = fallback
                 continue
 
             name = act["name"].split(" @ Vrienden")[0].strip()
