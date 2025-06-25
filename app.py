@@ -356,9 +356,9 @@ def create_app(
         fallback = "Sorry, we konden de beschrijving niet ophalen. :-(\n Laat je verrassen!"
         with acts_lock, programme_lock:
             legacy_programme = programme.copy()
-            legacy_acts = legacy_programme["acts"]
+            legacy_acts: dict[str, dict[str, Any]] = legacy_programme["acts"]
             for legacy_act in legacy_acts.values():
-                if legacy_act["description_html"] is None:
+                if legacy_act.get("description_html") is None:
                     legacy_act["description_html"] = fallback
                 legacy_act["description"] = _html_description_to_text(
                     legacy_act["description_html"]
