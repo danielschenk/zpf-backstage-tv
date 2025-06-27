@@ -1,6 +1,6 @@
 import threading
 from pathlib import Path
-from typing import IO, Callable, Any, override
+from typing import IO, Callable, Any, override, TypeVar
 import json
 import logging
 from functools import partial
@@ -23,21 +23,37 @@ class ThreadSafeObjectContextManager[T]:
         self._lock.release()
 
 
+SerializedType = TypeVar("SerializedType")
+
+
 class PersistentThreadSafeObjectContextManager[T](ThreadSafeObjectContextManager[T]):
     def __init__(
         self,
-        object: T,
+        default: T,
         file: Path | str,
         opener: OpenType = open,
-        serializer: Callable[[T], str | bytes] = partial(json.dumps, indent=2),
+        serializer: Callable[[T], SerializedType] = partial(json.dumps, indent=2),
+        deserializer: Callable[[SerializedType], T] = json.loads,
+        ignore_init_errors: list[type] = [json.JSONDecodeError],
         binary: bool = False,
     ):
-        super().__init__(object)
         self.opener = opener
         self.serializer = serializer
         self.binary = binary
         self._file = file
-        self._object = object
+
+        object = default
+        try:
+            with self.opener(str(file), f"r{'b' if binary else ''}") as f:
+                object = deserializer(f.read())
+                _logger.debug(f"loaded {file}")
+        except FileNotFoundError:
+            _logger.info(f"{file} not existing, using default value")
+        except Exception as e:
+            if type(e) not in ignore_init_errors:
+                raise
+            _logger.error(f"error deserializing existing data: {e}, using default value")
+        super().__init__(object)
 
     @override
     def __exit__(self, exc_type, exc_value, traceback):

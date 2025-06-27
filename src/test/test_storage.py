@@ -22,6 +22,38 @@ def test_persistance(tmp_json_path):
         assert json.load(f) == update
 
 
+def test_load_existing(tmp_json_path):
+    data = {"foo": 42}
+    with open(tmp_json_path, "w") as f:
+        json.dump(data, f)
+
+    manager = PersistentThreadSafeObjectContextManager(data, tmp_json_path)
+    with manager as loaded_data:
+        assert loaded_data == data
+
+
+def test_initial_value_on_deserialize_error(tmp_json_path):
+    data = {"foo": 42}
+    with open(tmp_json_path, "w") as f:
+        f.write(r'{"foo": ')
+
+    manager = PersistentThreadSafeObjectContextManager(data, tmp_json_path)
+    with manager as loaded_data:
+        assert loaded_data == data
+
+
+def test_raise_unknown_deserialize_error(tmp_json_path):
+    data = {"foo": 42}
+    with open(tmp_json_path, "w"):
+        pass
+
+    def deserializer(dummy: str) -> dict:
+        raise ValueError
+
+    with pytest.raises(ValueError):
+        PersistentThreadSafeObjectContextManager(data, tmp_json_path, deserializer=deserializer)
+
+
 @pytest.fixture
 def mock_open(tmp_path):
     def side_effect(filename, mode):
