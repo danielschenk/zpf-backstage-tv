@@ -3,7 +3,6 @@
 """Flask app which serves as the backend for the Zomerparkfeest Amigo backstage TV"""
 
 import threading
-import json
 import datetime
 import subprocess
 import pathlib
