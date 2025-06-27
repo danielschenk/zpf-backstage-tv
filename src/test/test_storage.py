@@ -2,7 +2,7 @@ from pathlib import Path
 import json
 from unittest.mock import MagicMock
 import pytest
-from ..storage import PersistentThreadSafeObjectContextManager
+from ..storage import CachedStorage
 
 
 @pytest.fixture
@@ -13,9 +13,9 @@ def tmp_json_path(tmp_path: Path) -> Path:
 def test_persistance(tmp_json_path):
     data = {}
     update = {"foo": 42}
-    manager = PersistentThreadSafeObjectContextManager(data, tmp_json_path)
+    storage = CachedStorage(data, tmp_json_path)
 
-    with manager as data:
+    with storage.open() as data:
         data.update(update)
 
     with open(tmp_json_path) as f:
@@ -27,8 +27,8 @@ def test_load_existing(tmp_json_path):
     with open(tmp_json_path, "w") as f:
         json.dump(data, f)
 
-    manager = PersistentThreadSafeObjectContextManager(data, tmp_json_path)
-    with manager as loaded_data:
+    storage = CachedStorage(data, tmp_json_path)
+    with storage.open() as loaded_data:
         assert loaded_data == data
 
 
@@ -37,8 +37,8 @@ def test_initial_value_on_deserialize_error(tmp_json_path):
     with open(tmp_json_path, "w") as f:
         f.write(r'{"foo": ')
 
-    manager = PersistentThreadSafeObjectContextManager(data, tmp_json_path)
-    with manager as loaded_data:
+    storage = CachedStorage(data, tmp_json_path)
+    with storage.open() as loaded_data:
         assert loaded_data == data
 
 
@@ -51,7 +51,7 @@ def test_raise_unknown_deserialize_error(tmp_json_path):
         raise ValueError
 
     with pytest.raises(ValueError):
-        PersistentThreadSafeObjectContextManager(data, tmp_json_path, deserializer=deserializer)
+        CachedStorage(data, tmp_json_path, deserializer=deserializer)
 
 
 default = {"foo": 42}
@@ -73,8 +73,8 @@ def test_validator(tmp_json_path, valid, expected):
         assert object == stored
         return valid
 
-    manager = PersistentThreadSafeObjectContextManager(default, tmp_json_path, validator=validator)
-    with manager as data:
+    storage = CachedStorage(default, tmp_json_path, validator=validator)
+    with storage.open() as data:
         assert data == expected
 
 
@@ -90,15 +90,25 @@ def test_skip_identical_write(mock_open):
     data = {}
     update = {"foo": 42}
     filename = "foo.json"
-    manager = PersistentThreadSafeObjectContextManager(data, filename, opener=mock_open)
+    storage = CachedStorage(data, filename, opener=mock_open)
 
-    with manager as data:
+    with storage.open() as data:
         data.update(update)
 
     mock_open.assert_called_with(filename, "w")
 
     mock_open.reset_mock()
-    with manager as data:
+    with storage.open() as data:
         pass
 
     mock_open.assert_called_once_with(filename, "r")
+
+
+def test_open_without_persisting(mock_open):
+    storage = CachedStorage({}, "foo", opener=mock_open)
+    mock_open.reset_mock()
+
+    with storage.open(persist=False):
+        pass
+
+    mock_open.assert_not_called()

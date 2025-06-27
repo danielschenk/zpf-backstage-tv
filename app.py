@@ -123,21 +123,21 @@ def create_app(
             return False
         return True
 
-    programme_storage = storage.PersistentThreadSafeObjectContextManager(
+    programme_storage = storage.CachedStorage(
         {"schema_version": "1.0", "acts": {}},
         "programme_cache.json",
         app.open_instance_resource,
         validator=programme_validator,
     )
-    acts_storage = storage.PersistentThreadSafeObjectContextManager[list[dict[str, Any]]](
+    acts_storage = storage.CachedStorage[list[dict[str, Any]]](
         [], "acts.json", app.open_instance_resource
     )
-    itinerary_storage = storage.PersistentThreadSafeObjectContextManager[dict[str, dict]](
+    itinerary_storage = storage.CachedStorage[dict[str, dict]](
         {}, "itinerary.json", app.open_instance_resource
     )
 
     def initialize_nonexistent_act_itineraries(acts: list[dict]):
-        with itinerary_storage as itinerary:
+        with itinerary_storage.open() as itinerary:
             for act in acts:
                 key = str(act["id"])
                 if key not in itinerary:
@@ -155,7 +155,7 @@ def create_app(
             logger.error(f"acts in unexpected format: {acts_temp}")
             return
 
-        with acts_storage as acts:
+        with acts_storage.open() as acts:
             acts.clear()
             acts.extend(acts_temp)
 
@@ -177,7 +177,7 @@ def create_app(
             sentry_sdk.capture_exception(e)
             website_acts = None
 
-        with acts_storage as acts:
+        with acts_storage.open() as acts:
             acts_copy = acts.copy()
 
         descriptions: dict[str, str | None] = {}
@@ -202,7 +202,7 @@ def create_app(
 
             descriptions[key] = best["description"]
 
-        with programme_storage as programme:
+        with programme_storage.open() as programme:
             programme_acts = programme.get("acts", {})
             assert isinstance(programme_acts, dict)
             for key, description in descriptions.items():
@@ -216,7 +216,7 @@ def create_app(
         def do_initial_fetch():
             update_acts()
             update_act_descriptions()
-            with acts_storage as acts:
+            with acts_storage.open(persist=False) as acts:
                 initialize_nonexistent_act_itineraries(acts)
 
         t = threading.Thread(name="initial_fetch", target=do_initial_fetch, daemon=True)
@@ -300,7 +300,9 @@ def create_app(
 
     def make_legacy_programme(stage=None):
         fallback = "Sorry, we konden de beschrijving niet ophalen. :-(\n Laat je verrassen!"
-        with acts_storage as acts, programme_storage as programme:
+        with acts_storage.open(persist=False) as acts, programme_storage.open(
+            persist=False
+        ) as programme:
             legacy_programme = programme.copy()
             legacy_acts: dict[str, dict[str, Any]] = legacy_programme["acts"]
             for legacy_act in legacy_acts.values():
@@ -400,7 +402,7 @@ def create_app(
         if item != "dressing_room":
             return Response("everything except dressing_room is read-only", status=405)
 
-        with itinerary_storage as itinerary:
+        with itinerary_storage.open() as itinerary:
             if act_key not in itinerary:
                 return Response("Act does not exist", status=404)
             itinerary[act_key][item] = request.data.decode("utf-8")
@@ -411,7 +413,9 @@ def create_app(
         return make_legacy_itinerary()
 
     def make_legacy_itinerary():
-        with itinerary_storage as itinerary, acts_storage as acts:
+        with itinerary_storage.open(persist=False) as itinerary, acts_storage.open(
+            persist=False
+        ) as acts:
             full_itinerary = itinerary.copy()
 
             for act in acts:

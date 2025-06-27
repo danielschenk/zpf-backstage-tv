@@ -1,9 +1,10 @@
 import threading
 from pathlib import Path
-from typing import IO, Callable, Any, override, TypeVar
+from typing import IO, Callable, Any, override, TypeVar, ContextManager
 import json
 import logging
 from functools import partial
+from contextlib import contextmanager
 
 _logger = logging.getLogger(__name__)
 
@@ -26,7 +27,37 @@ class ThreadSafeObjectContextManager[T]:
 SerializedType = TypeVar("SerializedType")
 
 
-class PersistentThreadSafeObjectContextManager[T: (dict, list)](ThreadSafeObjectContextManager[T]):
+class PersistentThreadSafeObjectContextManager[T](ThreadSafeObjectContextManager[T]):
+    def __init__(
+        self,
+        object: T,
+        file: Path | str,
+        opener: OpenType = open,
+        serializer: Callable[[T], SerializedType] = partial(json.dumps, indent=2),
+        binary: bool = False,
+    ):
+        self.opener = opener
+        self.serializer = serializer
+        self.binary = binary
+        self.persist = True
+        self._object = object
+        self._file = file
+        self._lock = threading.Lock()
+
+    @override
+    def __exit__(self, exc_type, exc_value, traceback):
+        try:
+            if not self.persist:
+                return
+            write_if_needed(
+                self._file, self.serializer(self._object), opener=self.opener, binary=self.binary
+            )
+        finally:
+            self.persist = True
+            super().__exit__(exc_type, exc_value, traceback)
+
+
+class CachedStorage[T: (dict, list)]:
     def __init__(
         self,
         default: T,
@@ -38,15 +69,11 @@ class PersistentThreadSafeObjectContextManager[T: (dict, list)](ThreadSafeObject
         binary: bool = False,
         validator: Callable[[T], bool] | None = None,
     ):
-        self.opener = opener
-        self.serializer = serializer
-        self.binary = binary
-        self._file = file
-        self._default = default
+        self._lock = threading.Lock()
 
         object = default.copy()
         try:
-            with self.opener(str(file), f"r{'b' if binary else ''}") as f:
+            with opener(str(file), f"r{'b' if binary else ''}") as f:
                 temp_object = deserializer(f.read())
                 if validator is None or validator(temp_object):
                     object = temp_object
@@ -60,16 +87,14 @@ class PersistentThreadSafeObjectContextManager[T: (dict, list)](ThreadSafeObject
                 raise
             _logger.error(f"error deserializing existing data: {e}, using default value")
 
-        super().__init__(object)
+        self._manager = PersistentThreadSafeObjectContextManager(
+            object=object, file=file, opener=opener, serializer=serializer, binary=binary
+        )
 
-    @override
-    def __exit__(self, exc_type, exc_value, traceback):
-        try:
-            write_if_needed(
-                self._file, self.serializer(self._object), opener=self.opener, binary=self.binary
-            )
-        finally:
-            super().__exit__(exc_type, exc_value, traceback)
+    def open(self, persist=True) -> ContextManager[T]:
+        with self._lock:
+            self._manager.persist = persist
+            return self._manager
 
 
 def write_if_needed(file: Path | str, new_contents, binary=False, opener: OpenType = open):
