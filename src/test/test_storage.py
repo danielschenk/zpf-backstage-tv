@@ -2,7 +2,7 @@ from pathlib import Path
 import json
 from unittest.mock import MagicMock
 import pytest
-from ..storage import PersistentDictContextManager
+from ..storage import PersistentThreadSafeObjectContextManager
 
 
 @pytest.fixture
@@ -13,7 +13,7 @@ def tmp_json_path(tmp_path: Path) -> Path:
 def test_persistance(tmp_json_path):
     data = {}
     update = {"foo": 42}
-    manager = PersistentDictContextManager(data, tmp_json_path)
+    manager = PersistentThreadSafeObjectContextManager(data, tmp_json_path)
 
     with manager as data:
         data.update(update)
@@ -34,7 +34,7 @@ def test_skip_identical_write(mock_open):
     data = {}
     update = {"foo": 42}
     filename = "foo.json"
-    manager = PersistentDictContextManager(data, filename, opener=mock_open)
+    manager = PersistentThreadSafeObjectContextManager(data, filename, opener=mock_open)
 
     with manager as data:
         data.update(update)

@@ -3,6 +3,7 @@ from pathlib import Path
 from typing import IO, Callable, Any, override
 import json
 import logging
+from functools import partial
 
 _logger = logging.getLogger(__name__)
 
@@ -22,19 +23,28 @@ class ThreadSafeObjectContextManager[T]:
         self._lock.release()
 
 
-class PersistentDictContextManager[KeyType, ValueType](
-    ThreadSafeObjectContextManager[dict[KeyType, ValueType]]
-):
-    def __init__(self, dict: dict[KeyType, ValueType], file: Path | str, opener: OpenType = open):
-        super().__init__(dict)
+class PersistentThreadSafeObjectContextManager[T](ThreadSafeObjectContextManager[T]):
+    def __init__(
+        self,
+        object: T,
+        file: Path | str,
+        opener: OpenType = open,
+        serializer: Callable[[T], str | bytes] = partial(json.dumps, indent=2),
+        binary: bool = False,
+    ):
+        super().__init__(object)
         self.opener = opener
+        self.serializer = serializer
+        self.binary = binary
         self._file = file
-        self._dict = dict
+        self._object = object
 
     @override
     def __exit__(self, exc_type, exc_value, traceback):
         try:
-            write_if_needed(self._file, json.dumps(self._dict, indent=2), opener=self.opener)
+            write_if_needed(
+                self._file, self.serializer(self._object), opener=self.opener, binary=self.binary
+            )
         finally:
             super().__exit__(exc_type, exc_value, traceback)
 
