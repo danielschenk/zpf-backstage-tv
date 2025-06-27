@@ -26,7 +26,7 @@ class ThreadSafeObjectContextManager[T]:
 SerializedType = TypeVar("SerializedType")
 
 
-class PersistentThreadSafeObjectContextManager[T](ThreadSafeObjectContextManager[T]):
+class PersistentThreadSafeObjectContextManager[T: (dict, list)](ThreadSafeObjectContextManager[T]):
     def __init__(
         self,
         default: T,
@@ -36,16 +36,22 @@ class PersistentThreadSafeObjectContextManager[T](ThreadSafeObjectContextManager
         deserializer: Callable[[SerializedType], T] = json.loads,
         ignore_init_errors: list[type] = [json.JSONDecodeError],
         binary: bool = False,
+        validator: Callable[[T], bool] | None = None,
     ):
         self.opener = opener
         self.serializer = serializer
         self.binary = binary
         self._file = file
+        self._default = default
 
-        object = default
+        object = default.copy()
         try:
             with self.opener(str(file), f"r{'b' if binary else ''}") as f:
-                object = deserializer(f.read())
+                temp_object = deserializer(f.read())
+                if validator is None or validator(temp_object):
+                    object = temp_object
+                else:
+                    _logger.error(f"data validation failed for {file}, using default value")
                 _logger.debug(f"loaded {file}")
         except FileNotFoundError:
             _logger.info(f"{file} not existing, using default value")
@@ -53,6 +59,7 @@ class PersistentThreadSafeObjectContextManager[T](ThreadSafeObjectContextManager
             if type(e) not in ignore_init_errors:
                 raise
             _logger.error(f"error deserializing existing data: {e}, using default value")
+
         super().__init__(object)
 
     @override

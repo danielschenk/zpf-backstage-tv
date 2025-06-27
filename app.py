@@ -19,7 +19,7 @@ import flask
 from flask import Flask, render_template, jsonify, make_response, request, Response
 from flask_login import LoginManager, login_user, login_required
 from flask_bootstrap import Bootstrap
-from src import users
+from src import users, storage
 from apscheduler.schedulers.background import BackgroundScheduler
 import icalendar
 import requests.auth
@@ -31,15 +31,6 @@ import zpfwebsite
 
 APP_DIR = pathlib.Path(__file__).parent
 DEFAULT_INSTANCE_PATH = APP_DIR / "instance"
-
-programme = {"schema_version": "1.0", "acts": {}}
-programme_lock = threading.Lock()
-
-acts: list[dict[str, Any]] = []
-acts_lock = threading.Lock()
-
-itinerary: dict[str, dict] = {}
-itinerary_lock = threading.Lock()
 
 scheduler = BackgroundScheduler()
 
@@ -113,7 +104,7 @@ def create_app(
 
     _key = app.config["SECRET_KEY"]
     if _key is None:
-        logger.warn("SECRET_KEY not set, using random key every restart!")
+        logger.warning("SECRET_KEY not set, using random key every restart!")
         _key = os.urandom(64)
     app.config["SECRET_KEY"] = _key
 
@@ -123,38 +114,34 @@ def create_app(
 
     api = zpfwebsite.Api(app.config["ZPF_API_URL"] if app.config["UPDATE_PROGRAMME"] else "")
 
-    def persist_itinerary(itinerary):
-        persist_data(itinerary, "itinerary")
-
-    def persist_programme(programme):
-        persist_data(programme, "programme_cache")
-
-    def persist_data(data, name):
-        write_if_needed(f"{name}.json", json.dumps(data, indent=2))
-
-    def write_if_needed(filename, new_contents, binary=False):
-        optional_b = "b" if binary else ""
+    def programme_validator(programme: dict[str, Any]) -> bool:
         try:
-            with app.open_instance_resource(filename, f"r{optional_b}") as f:
-                if new_contents == f.read():
-                    logger.debug(f"contents of {filename} unchanged, skipping write")
-                    return
-        except FileNotFoundError:
-            logger.debug(f"creating {filename}")
+            major, minor = programme["schema_version"].split(".")
+            if int(major) < 1:
+                return False
+        except KeyError:
+            return False
+        return True
 
-        logger.debug(f"writing {filename}")
-        with app.open_instance_resource(filename, f"w{optional_b}+") as f:
-            f.write(new_contents)
+    programme_storage = storage.PersistentThreadSafeObjectContextManager(
+        {"schema_version": "1.0", "acts": {}},
+        "programme_cache.json",
+        app.open_instance_resource,
+        validator=programme_validator,
+    )
+    acts_storage = storage.PersistentThreadSafeObjectContextManager[list[dict[str, Any]]](
+        [], "acts.json", app.open_instance_resource
+    )
+    itinerary_storage = storage.PersistentThreadSafeObjectContextManager[dict[str, dict]](
+        {}, "itinerary.json", app.open_instance_resource
+    )
 
-    def initialize_nonexistent_act_itineraries(acts):
-        global itinerary
-        global itinerary_lock
-        with itinerary_lock:
+    def initialize_nonexistent_act_itineraries(acts: list[dict]):
+        with itinerary_storage as itinerary:
             for act in acts:
                 key = str(act["id"])
                 if key not in itinerary:
                     itinerary[key] = {"dressing_room": "None"}
-            persist_itinerary(itinerary)
 
     def update_acts():
         config = app.config
@@ -163,12 +150,14 @@ def create_app(
         logger.info("getting acts...")
         response = session.get(config["ACTS_URL"])
         response.raise_for_status()
-        global acts
-        global acts_lock
         acts_temp = response.json()
-        with acts_lock:
-            acts = acts_temp
-        write_if_needed("acts.json", response.content, binary=True)
+        if not isinstance(acts_temp, list):
+            logger.error(f"acts in unexpected format: {acts_temp}")
+            return
+
+        with acts_storage as acts:
+            acts.clear()
+            acts.extend(acts_temp)
 
         initialize_nonexistent_act_itineraries(acts_temp)
 
@@ -188,9 +177,7 @@ def create_app(
             sentry_sdk.capture_exception(e)
             website_acts = None
 
-        global acts
-        global acts_lock
-        with acts_lock:
+        with acts_storage as acts:
             acts_copy = acts.copy()
 
         descriptions: dict[str, str | None] = {}
@@ -215,57 +202,21 @@ def create_app(
 
             descriptions[key] = best["description"]
 
-        global programme
-        global programme_lock
-        with programme_lock:
+        with programme_storage as programme:
             programme_acts = programme.get("acts", {})
+            assert isinstance(programme_acts, dict)
             for key, description in descriptions.items():
                 if key not in programme_acts:
                     programme_acts[key] = {}
                 act = programme_acts[key]
                 act["description_html"] = description
 
-            persist_programme(programme)
-
-    try:
-        global programme
-        with app.open_instance_resource("programme_cache.json", "r") as f:
-            logger.info("found programme cache on disk")
-            programme_temp = json.load(f)
-            try:
-                major, minor = programme["schema_version"].split(".")
-                if int(major) < 1:
-                    raise IncompatibleCacheError()
-            except KeyError:
-                raise IncompatibleCacheError()
-            programme = programme_temp
-    except (FileNotFoundError, IncompatibleCacheError):
-        logger.warning("no programme cache on disk or incompatible, need initial fetch")
-
-    try:
-        global acts
-        with app.open_instance_resource("acts.json", "r") as f:
-            logger.info("found persisted acts on disk")
-            acts = json.load(f)
-    except FileNotFoundError:
-        logger.warning("no acts on disk, need initial fetch")
-
-    try:
-        global itinerary
-        with app.open_instance_resource("itinerary.json", "r") as f:
-            logger.info("found persisted itinerary on disk")
-            itinerary = json.load(f)
-    except FileNotFoundError:
-        logger.warning("no itinerary on disk")
-
     if app.config["UPDATE_PROGRAMME"]:
         # make sure we always do one at startup, but don't block server
         def do_initial_fetch():
             update_acts()
             update_act_descriptions()
-            global acts
-            global acts_lock
-            with acts_lock:
+            with acts_storage as acts:
                 initialize_nonexistent_act_itineraries(acts)
 
         t = threading.Thread(name="initial_fetch", target=do_initial_fetch, daemon=True)
@@ -348,13 +299,8 @@ def create_app(
         return response
 
     def make_legacy_programme(stage=None):
-        global acts
-        global acts_lock
-        global programme
-        global programme_lock
-
         fallback = "Sorry, we konden de beschrijving niet ophalen. :-(\n Laat je verrassen!"
-        with acts_lock, programme_lock:
+        with acts_storage as acts, programme_storage as programme:
             legacy_programme = programme.copy()
             legacy_acts: dict[str, dict[str, Any]] = legacy_programme["acts"]
             for legacy_act in legacy_acts.values():
@@ -454,13 +400,10 @@ def create_app(
         if item != "dressing_room":
             return Response("everything except dressing_room is read-only", status=405)
 
-        global itinerary
-        global itinerary_lock
-        with itinerary_lock:
+        with itinerary_storage as itinerary:
             if act_key not in itinerary:
                 return Response("Act does not exist", status=404)
             itinerary[act_key][item] = request.data.decode("utf-8")
-            persist_itinerary(itinerary)
         return "success"
 
     @app.route("/itinerary")
@@ -468,11 +411,7 @@ def create_app(
         return make_legacy_itinerary()
 
     def make_legacy_itinerary():
-        global itinerary
-        global itinerary_lock
-        global acts
-        global acts_lock
-        with itinerary_lock, acts_lock:
+        with itinerary_storage as itinerary, acts_storage as acts:
             full_itinerary = itinerary.copy()
 
             for act in acts:

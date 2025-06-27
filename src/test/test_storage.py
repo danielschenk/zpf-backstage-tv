@@ -54,6 +54,30 @@ def test_raise_unknown_deserialize_error(tmp_json_path):
         PersistentThreadSafeObjectContextManager(data, tmp_json_path, deserializer=deserializer)
 
 
+default = {"foo": 42}
+stored = {"foo": 43}
+
+
+@pytest.mark.parametrize(
+    "valid, expected",
+    [
+        (True, stored),
+        (False, default),
+    ],
+)
+def test_validator(tmp_json_path, valid, expected):
+    with open(tmp_json_path, "w") as f:
+        json.dump(stored, f)
+
+    def validator(object):
+        assert object == stored
+        return valid
+
+    manager = PersistentThreadSafeObjectContextManager(default, tmp_json_path, validator=validator)
+    with manager as data:
+        assert data == expected
+
+
 @pytest.fixture
 def mock_open(tmp_path):
     def side_effect(filename, mode):
