@@ -4,6 +4,7 @@ import multiprocessing
 import pathlib
 import tempfile
 import shutil
+import time
 
 import pytest
 import requests
@@ -71,6 +72,7 @@ def app():
         )
         process = multiprocessing.Process(target=the_app.run)
         process.start()
+        time.sleep(2)
         yield
         process.terminate()
         process.join()
@@ -84,6 +86,7 @@ def app_virgin():
         )
         process = multiprocessing.Process(target=the_app.run)
         process.start()
+        time.sleep(2)
         yield
         process.terminate()
         process.join()

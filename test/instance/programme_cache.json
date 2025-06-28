@@ -1,5 +1,5 @@
 {
-  "schema_version": "0.2",
+  "schema_version": "1.0",
   "fetch_time": "2023-05-06T22:30:35.865715",
   "acts": {
     "foo": {
