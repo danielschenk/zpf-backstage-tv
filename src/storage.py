@@ -1,6 +1,6 @@
 import threading
 from pathlib import Path
-from typing import IO, Callable, Any, TypeVar, ContextManager
+from typing import IO, Callable, Any, ContextManager
 import json
 import logging
 from functools import partial
