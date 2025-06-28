@@ -15,8 +15,9 @@ def test_persistance(tmp_json_path):
     update = {"foo": 42}
     storage = CachedStorage(data, tmp_json_path)
 
-    with storage.open() as data:
+    with storage.lock() as data:
         data.update(update)
+        storage.save()
 
     with open(tmp_json_path) as f:
         assert json.load(f) == update
@@ -28,7 +29,7 @@ def test_load_existing(tmp_json_path):
         json.dump(data, f)
 
     storage = CachedStorage(data, tmp_json_path)
-    with storage.open() as loaded_data:
+    with storage.lock() as loaded_data:
         assert loaded_data == data
 
 
@@ -38,7 +39,7 @@ def test_initial_value_on_deserialize_error(tmp_json_path):
         f.write(r'{"foo": ')
 
     storage = CachedStorage(data, tmp_json_path)
-    with storage.open() as loaded_data:
+    with storage.lock() as loaded_data:
         assert loaded_data == data
 
 
@@ -74,7 +75,7 @@ def test_validator(tmp_json_path, valid, expected):
         return valid
 
     storage = CachedStorage(default, tmp_json_path, validator=validator)
-    with storage.open() as data:
+    with storage.lock() as data:
         assert data == expected
 
 
@@ -92,14 +93,15 @@ def test_skip_identical_write(mock_open):
     filename = "foo.json"
     storage = CachedStorage(data, filename, opener=mock_open)
 
-    with storage.open() as data:
+    with storage.lock() as data:
         data.update(update)
+        storage.save()
 
     mock_open.assert_called_with(filename, "w")
 
     mock_open.reset_mock()
-    with storage.open() as data:
-        pass
+    with storage.lock() as data:
+        storage.save()
 
     mock_open.assert_called_once_with(filename, "r")
 
@@ -108,7 +110,7 @@ def test_open_without_persisting(mock_open):
     storage = CachedStorage({}, "foo", opener=mock_open)
     mock_open.reset_mock()
 
-    with storage.open(persist=False):
+    with storage.lock():
         pass
 
     mock_open.assert_not_called()

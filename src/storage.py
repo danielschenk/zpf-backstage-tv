@@ -1,19 +1,17 @@
 import threading
 from pathlib import Path
-from typing import IO, Callable, Any, override, TypeVar, ContextManager
+from typing import IO, Callable, Any, TypeVar, ContextManager
 import json
 import logging
 from functools import partial
 
 _logger = logging.getLogger(__name__)
 
-OpenType = Callable[[str, str], IO[Any]]
-
 
 class ThreadSafeObjectContextManager[T]:
-    def __init__(self, object: T):
+    def __init__(self, object: T, lock=threading.Lock()):
         self._object = object
-        self._lock = threading.Lock()
+        self._lock = lock
 
     def __enter__(self) -> T:
         self._lock.acquire()
@@ -23,59 +21,32 @@ class ThreadSafeObjectContextManager[T]:
         self._lock.release()
 
 
-SerializedType = TypeVar("SerializedType")
+OpenType = Callable[[str, str], IO[Any]]
 
 
-class PersistentThreadSafeObjectContextManager[T](ThreadSafeObjectContextManager[T]):
+class CachedStorage[DataType: (dict, list), SerializedType]:
     def __init__(
         self,
-        object: T,
+        default: DataType,
         file: Path | str,
         opener: OpenType = open,
-        serializer: Callable[[T], SerializedType] = partial(json.dumps, indent=2),
+        serializer: Callable[[DataType], SerializedType] = partial(json.dumps, indent=2),
+        deserializer: Callable[[SerializedType], DataType] = json.loads,
+        ignore_init_errors: list[type[Exception]] = [json.JSONDecodeError],
         binary: bool = False,
+        validator: Callable[[DataType], bool] = lambda _: True,
     ):
         self.opener = opener
         self.serializer = serializer
         self.binary = binary
-        self.persist = True
-        self._object = object
         self._file = file
-        self._lock = threading.Lock()
 
-    @override
-    def __exit__(self, exc_type, exc_value, traceback):
-        try:
-            if not self.persist:
-                return
-            write_if_needed(
-                self._file, self.serializer(self._object), opener=self.opener, binary=self.binary
-            )
-        finally:
-            self.persist = True
-            super().__exit__(exc_type, exc_value, traceback)
-
-
-class CachedStorage[T: (dict, list)]:
-    def __init__(
-        self,
-        default: T,
-        file: Path | str,
-        opener: OpenType = open,
-        serializer: Callable[[T], SerializedType] = partial(json.dumps, indent=2),
-        deserializer: Callable[[SerializedType], T] = json.loads,
-        ignore_init_errors: list[type] = [json.JSONDecodeError],
-        binary: bool = False,
-        validator: Callable[[T], bool] | None = None,
-    ):
-        self._lock = threading.Lock()
-
-        object = default.copy()
+        self._object = default.copy()
         try:
             with opener(str(file), f"r{'b' if binary else ''}") as f:
                 temp_object = deserializer(f.read())
-                if validator is None or validator(temp_object):
-                    object = temp_object
+                if validator(temp_object):
+                    self._object = temp_object
                 else:
                     _logger.error(f"data validation failed for {file}, using default value")
                 _logger.debug(f"loaded {file}")
@@ -86,14 +57,17 @@ class CachedStorage[T: (dict, list)]:
                 raise
             _logger.error(f"error deserializing existing data: {e}, using default value")
 
-        self._manager = PersistentThreadSafeObjectContextManager(
-            object=object, file=file, opener=opener, serializer=serializer, binary=binary
-        )
+        self._manager = ThreadSafeObjectContextManager(object=self._object, lock=threading.RLock())
 
-    def open(self, persist=True) -> ContextManager[T]:
-        with self._lock:
-            self._manager.persist = persist
-            return self._manager
+    def lock(self) -> ContextManager[DataType]:
+        return self._manager
+
+    def save(self):
+        # we use an RLock so this should be fine both outside and inside of the lock
+        with self._manager:
+            write_if_needed(
+                self._file, self.serializer(self._object), opener=self.opener, binary=self.binary
+            )
 
 
 def write_if_needed(file: Path | str, new_contents, binary=False, opener: OpenType = open):

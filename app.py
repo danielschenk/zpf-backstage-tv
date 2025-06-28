@@ -122,25 +122,26 @@ def create_app(
             return False
         return True
 
-    programme_storage = storage.CachedStorage(
+    programme_storage = storage.CachedStorage[dict[str, Any], str](
         {"schema_version": "1.0", "acts": {}},
         "programme_cache.json",
         app.open_instance_resource,
         validator=programme_validator,
     )
-    acts_storage = storage.CachedStorage[list[dict[str, Any]]](
+    acts_storage = storage.CachedStorage[list[dict[str, Any]], str](
         [], "acts.json", app.open_instance_resource
     )
-    itinerary_storage = storage.CachedStorage[dict[str, dict]](
+    itinerary_storage = storage.CachedStorage[dict[str, dict], str](
         {}, "itinerary.json", app.open_instance_resource
     )
 
     def initialize_nonexistent_act_itineraries(acts: list[dict]):
-        with itinerary_storage.open() as itinerary:
+        with itinerary_storage.lock() as itinerary:
             for act in acts:
                 key = str(act["id"])
                 if key not in itinerary:
                     itinerary[key] = {"dressing_room": "None"}
+            itinerary_storage.save()
 
     def update_acts():
         config = app.config
@@ -154,9 +155,10 @@ def create_app(
             logger.error(f"acts in unexpected format: {acts_temp}")
             return
 
-        with acts_storage.open() as acts:
+        with acts_storage.lock() as acts:
             acts.clear()
             acts.extend(acts_temp)
+            acts_storage.save()
 
         initialize_nonexistent_act_itineraries(acts_temp)
 
@@ -176,7 +178,7 @@ def create_app(
             sentry_sdk.capture_exception(e)
             website_acts = None
 
-        with acts_storage.open() as acts:
+        with acts_storage.lock() as acts:
             acts_copy = acts.copy()
 
         descriptions: dict[str, str | None] = {}
@@ -201,7 +203,7 @@ def create_app(
 
             descriptions[key] = best["description"]
 
-        with programme_storage.open() as programme:
+        with programme_storage.lock() as programme:
             programme_acts = programme.get("acts", {})
             assert isinstance(programme_acts, dict)
             for key, description in descriptions.items():
@@ -209,13 +211,14 @@ def create_app(
                     programme_acts[key] = {}
                 act = programme_acts[key]
                 act["description_html"] = description
+            programme_storage.save()
 
     if app.config["UPDATE_PROGRAMME"]:
         # make sure we always do one at startup, but don't block server
         def do_initial_fetch():
             update_acts()
             update_act_descriptions()
-            with acts_storage.open(persist=False) as acts:
+            with acts_storage.lock() as acts:
                 initialize_nonexistent_act_itineraries(acts)
 
         t = threading.Thread(name="initial_fetch", target=do_initial_fetch, daemon=True)
@@ -299,9 +302,7 @@ def create_app(
 
     def make_legacy_programme(stage=None):
         fallback = "Sorry, we konden de beschrijving niet ophalen. :-(\n Laat je verrassen!"
-        with acts_storage.open(persist=False) as acts, programme_storage.open(
-            persist=False
-        ) as programme:
+        with acts_storage.lock() as acts, programme_storage.lock() as programme:
             legacy_programme = programme.copy()
             legacy_acts: dict[str, dict[str, Any]] = legacy_programme["acts"]
             for legacy_act in legacy_acts.values():
@@ -401,10 +402,11 @@ def create_app(
         if item != "dressing_room":
             return Response("everything except dressing_room is read-only", status=405)
 
-        with itinerary_storage.open() as itinerary:
+        with itinerary_storage.lock() as itinerary:
             if act_key not in itinerary:
                 return Response("Act does not exist", status=404)
             itinerary[act_key][item] = request.data.decode("utf-8")
+            itinerary_storage.save()
         return "success"
 
     @app.route("/itinerary")
@@ -412,9 +414,7 @@ def create_app(
         return make_legacy_itinerary()
 
     def make_legacy_itinerary():
-        with itinerary_storage.open(persist=False) as itinerary, acts_storage.open(
-            persist=False
-        ) as acts:
+        with itinerary_storage.lock() as itinerary, acts_storage.lock() as acts:
             full_itinerary = itinerary.copy()
 
             for act in acts:
