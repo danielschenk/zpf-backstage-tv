@@ -8,6 +8,7 @@ def test_programme(session):
     assert acts["foo"]["description"] == "Description of Foo"
     assert acts["bar"]["name"] == "Bar"
     assert acts["bar"]["description"] == "Description of Bar"
+    assert "baz" not in acts  # different stage
 
 
 def test_itinerary(session):
