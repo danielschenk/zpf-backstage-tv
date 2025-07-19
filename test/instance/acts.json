@@ -1,0 +1,80 @@
+[
+  {
+    "id": "foo",
+    "name": "Foo",
+    "timeline": [
+      {
+        "start": "2025-08-09 21:00:00",
+        "end": "2025-08-09 21:00:00",
+        "type": "Get in",
+        "stage": null
+      },
+      {
+        "start": "2025-08-09 21:30:00",
+        "end": "2025-08-09 21:45:00",
+        "type": "Set up (backstage)",
+        "stage": "Amigo"
+      },
+      {
+        "start": "2025-08-09 21:45:00",
+        "end": "2025-08-09 22:15:00",
+        "type": "Set up",
+        "stage": "Amigo"
+      },
+      {
+        "start": "2025-08-09 22:15:00",
+        "end": "2025-08-09 22:30:00",
+        "type": "Soundcheck",
+        "stage": "Amigo"
+      },
+      {
+        "start": "2025-08-09 22:30:00",
+        "end": "2025-08-09 23:30:00",
+        "type": "Showtime",
+        "stage": "Amigo"
+      }
+    ]
+  },
+  {
+    "id": "bar",
+    "name": "Bar",
+    "timeline": [
+      {
+        "start": "2025-08-07 19:00:00",
+        "end": "2025-08-07 19:00:00",
+        "type": "Get in",
+        "stage": null
+      },
+      {
+        "start": "2025-08-07 19:15:00",
+        "end": "2025-08-07 20:00:00",
+        "type": "Dinner",
+        "stage": null
+      },
+      {
+        "start": "2025-08-07 20:00:00",
+        "end": "2025-08-07 20:45:00",
+        "type": "Linecheck",
+        "stage": "Amigo"
+      },
+      {
+        "start": "2025-08-07 20:45:00",
+        "end": "2025-08-07 21:30:00",
+        "type": "Showtime",
+        "stage": "Amigo"
+      }
+    ]
+  },
+  {
+    "id": "baz",
+    "name": "Baz",
+    "timeline": [
+      {
+        "start": "2025-08-10 20:15:00",
+        "end": "2025-08-10 21:15:00",
+        "type": "Showtime",
+        "stage": "Main"
+      }
+    ]
+  }
+]

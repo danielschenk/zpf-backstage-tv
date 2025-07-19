@@ -6,14 +6,11 @@
     "configurations": [
         {
             "name": "Python: Flask",
-            "type": "python",
+            "type": "debugpy",
             "request": "launch",
             "module": "flask",
             "env": {
-                "FLASK_DEBUG": "1",
-                "SECRET_KEY": "810ee12f01b73bb93c50a60529d6d132153a649857132c6d6ec064618d4ca06d",
-                "USERNAME": "user",
-                "PASSWORD": "test"
+                "FLASK_DEBUG": "1"
             },
             "args": [
                 "run",
@@ -24,31 +21,6 @@
                 "5001"
             ],
             "jinja": true,
-            "justMyCode": true
-        },
-        {
-            "name": "Programme downloader (force cache)",
-            "type": "python",
-            "request": "launch",
-            "program": "${workspaceFolder}/zpf_programme_downloader.py",
-            "args": [
-                "--force-cache",
-                "--stage-filter",
-                "AMIGO"
-            ],
-            "console": "integratedTerminal",
-            "justMyCode": true
-        },
-        {
-            "name": "Programme downloader",
-            "type": "python",
-            "request": "launch",
-            "program": "${workspaceFolder}/zpf_programme_downloader.py",
-            "args": [
-                "--stage-filter",
-                "AMIGO"
-            ],
-            "console": "integratedTerminal",
             "justMyCode": true
         }
     ]

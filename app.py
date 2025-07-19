@@ -7,7 +7,6 @@ import datetime
 import subprocess
 import pathlib
 from typing import OrderedDict, Any
-from functools import cmp_to_key
 import os
 from dataclasses import dataclass
 import uuid
@@ -113,17 +112,19 @@ def create_app(
 
     api = zpfwebsite.Api(app.config["ZPF_API_URL"] if app.config["UPDATE_PROGRAMME"] else "")
 
+    programme_schema_major = 2
+
     def programme_validator(programme: dict[str, Any]) -> bool:
         try:
             major, minor = programme["schema_version"].split(".")
-            if int(major) < 1:
+            if int(major) < programme_schema_major:
                 return False
         except KeyError:
             return False
         return True
 
     programme_storage = storage.CachedStorage[dict[str, Any], str](
-        {"schema_version": "1.0", "acts": {}},
+        {"schema_version": f"{programme_schema_major}.0", "acts": {}},
         "programme_cache.json",
         app.open_instance_resource,
         validator=programme_validator,
@@ -234,46 +235,19 @@ def create_app(
         """Main page handler"""
         programme = make_legacy_programme("AMIGO")
         acts_by_day = OrderedDict()
-        # pre-add days to ensure correct order
-        for day in ("woensdag", "donderdag", "vrijdag", "zaterdag", "zondag"):
-            acts_by_day[day] = {}
 
-        def compare_show_times(
-            act1: tuple[str, dict[str, Any]], act2: tuple[str, dict[str, Any]]
-        ) -> int:
-            """Compare show times, assuming next day at 06:00 instead of midnight"""
-            act1_shows = act1[1]["shows"]
-            act2_shows = act2[1]["shows"]
-            if not act1_shows or not act2_shows:
-                return 0
+        def get_first_show_start_utc(item: tuple[str, dict[str, Any]]):
+            shows: list[dict[str, str]] = item[1]["shows"]
+            return sorted(shows, key=lambda show: show["start_utc"])[0]["start_utc"]
 
-            start1 = act1_shows[0]["start"]
-            start2 = act2_shows[0]["start"]
-
-            if start1 == start2:
-                return 0
-
-            next_festival_day = "06:00"
-            if start1 < start2:
-                if start1 < next_festival_day and start2 >= next_festival_day:
-                    # greater than (because one show is past midnight,
-                    # but still same evening)
-                    return 1
-                return -1
-            else:
-                if start1 >= next_festival_day and start2 < next_festival_day:
-                    # lesser than (because one show is past midnight,
-                    # but still same evening)
-                    return -1
-                return 1
-
-        acts = OrderedDict(sorted(programme["acts"].items(), key=cmp_to_key(compare_show_times)))
+        acts = OrderedDict(sorted(programme["acts"].items(), key=get_first_show_start_utc))
 
         for key, act in acts.items():
             for show in act["shows"]:
                 day = show["day"]
+                if day not in acts_by_day:
+                    acts_by_day[day] = {}
                 if key not in acts_by_day[day]:
-                    assert day in acts_by_day
                     acts_by_day[day][key] = act.copy()
 
         fetch_time = programme.get("fetch_time", None)
@@ -300,23 +274,33 @@ def create_app(
         response = make_response(programme)
         return response
 
-    def make_legacy_programme(stage=None):
+    def make_legacy_programme(stage=None) -> dict[str, dict[str, Any]]:
+        """Returns the programme (combined descriptions and itinerary) in legacy format
+
+        This is the format which is still used by the data entry frontend and the AmigoText itself.
+        """
         fallback = "Sorry, we konden de beschrijving niet ophalen. :-(\n Laat je verrassen!"
         with acts_storage.lock() as acts, programme_storage.lock() as programme:
-            legacy_programme = programme.copy()
-            legacy_acts: dict[str, dict[str, Any]] = legacy_programme["acts"]
-            for legacy_act in legacy_acts.values():
-                if legacy_act.get("description_html") is None:
-                    legacy_act["description_html"] = fallback
-                legacy_act["description"] = _html_description_to_text(
-                    legacy_act["description_html"]
-                )
+            legacy_programme: dict[str, dict[str, Any]] = {}
+            legacy_programme["acts"] = legacy_acts = {}
+
+            # Use acts as lead (as this comes from the production planner)
             for act in acts:
                 key = str(act["id"])
-                legacy_act = legacy_acts.get(key, {})
-                legacy_act["name"] = act["name"]
+                try:
+                    html = programme["acts"][key]["description_html"]
+                    if html is None:
+                        html = fallback
+                except KeyError:
+                    html = fallback
+
                 shows = []
-                legacy_act["shows"] = shows
+                legacy_act = {
+                    "name": act["name"],
+                    "shows": shows,
+                    "description_html": html,
+                    "description": _html_description_to_text(html),
+                }
                 timeline: list[dict[str, Any]] = act["timeline"]
                 for event in timeline:
                     if event["type"] == "Showtime":
@@ -531,5 +515,4 @@ def act_datestr_to_datetime(datestr: str):
 
 def festival_weekday(timepoint: datetime.datetime):
     """Returns the `datetime` day of week for a timepoint, assuming 06:00 for start of new day"""
-    shifted_timestamp = timepoint.timestamp() - 6 * 3600
-    return datetime.datetime.fromtimestamp(shifted_timestamp).weekday()
+    return (timepoint - datetime.timedelta(hours=6)).weekday()
