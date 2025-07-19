@@ -3,15 +3,15 @@
 
 <body onload="onLoad()">
     <ul class="navigation">
-    {{ macros.nav_button("arrow_back", "/", "material-symbols-outlined") }}
+        {{ macros.nav_button("arrow_back", "/", "material-symbols-outlined") }}
     </ul>
     <div class="navigation-margin"></div>
     <p>Here you can generate a URL for a calendar feed which you can subscribe to on your
-    device, and contains up-to-date shows and dressing rooms for this stage.</p>
+        device, and contains up-to-date shows and dressing rooms for this stage.</p>
 
     <p>Include days:</p>
     <ul id="days">
-        {% for day in ("donderdag", "vrijdag", "zaterdag", "zondag") %}
+        {% for day in ("woensdag", "donderdag", "vrijdag", "zaterdag", "zondag") %}
         <li>
             <input type="checkbox" id="enable-{{ day }}" value="{{ day }}" onclick="updateUrl()" checked>
             <label for="enable-{{ day }}">{{ day }}</label>
@@ -51,8 +51,8 @@
     <button onclick="copy()"><span class="material-symbols-outlined">content_copy</span> Copy</button>
 
     <div class="centered">
-        <img src="{{ url_for('static', filename='logo.png') }}", width="500"/>
+        <img src="{{ url_for('static', filename='logo.png') }}" , width="500" />
     </div>
 
-    <script src="{{ url_for('static', filename="generate-ical-url.js") }}"></script>
+    <script src="{{ url_for('static', filename='generate-ical-url.js') }}"></script>
 </body>
