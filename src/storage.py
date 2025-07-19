@@ -42,14 +42,16 @@ class CachedStorage[DataType: (dict, list), SerializedType]:
         self._file = file
 
         self._object = default.copy()
+        need_save = True
         try:
             with opener(str(file), f"r{'b' if binary else ''}") as f:
                 temp_object = deserializer(f.read())
-                if validator(temp_object):
-                    self._object = temp_object
-                else:
-                    _logger.error(f"data validation failed for {file}, using default value")
-                _logger.debug(f"loaded {file}")
+            if validator(temp_object):
+                self._object = temp_object
+                need_save = False
+            else:
+                _logger.error(f"data validation failed for {file}, using default value")
+            _logger.debug(f"loaded {file}")
         except FileNotFoundError:
             _logger.info(f"{file} not existing, using default value")
         except Exception as e:
@@ -58,6 +60,9 @@ class CachedStorage[DataType: (dict, list), SerializedType]:
             _logger.error(f"error deserializing existing data: {e}, using default value")
 
         self._manager = ThreadSafeObjectContextManager(object=self._object, lock=threading.RLock())
+
+        if need_save:
+            self.save()
 
     def lock(self) -> ContextManager[DataType]:
         return self._manager

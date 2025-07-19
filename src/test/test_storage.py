@@ -10,7 +10,7 @@ def tmp_json_path(tmp_path: Path) -> Path:
     return tmp_path / "test.json"
 
 
-def test_persistance(tmp_json_path):
+def test_persistence(tmp_json_path):
     data = {}
     update = {"foo": 42}
     storage = CachedStorage(data, tmp_json_path)
@@ -41,6 +41,10 @@ def test_initial_value_on_deserialize_error(tmp_json_path):
     storage = CachedStorage(data, tmp_json_path)
     with storage.lock() as loaded_data:
         assert loaded_data == data
+
+    # immediate save to disk required too
+    with open(tmp_json_path, "r") as f:
+        assert json.load(f) == loaded_data
 
 
 def test_raise_unknown_deserialize_error(tmp_json_path):
