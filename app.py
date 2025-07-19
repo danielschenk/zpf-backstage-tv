@@ -72,10 +72,6 @@ def is_safe_url(target):
     return test_url.scheme in ("http", "https") and ref_url.netloc == test_url.netloc
 
 
-class IncompatibleCacheError(RuntimeError):
-    pass
-
-
 @dataclass
 class ItineraryField:
     key: str
