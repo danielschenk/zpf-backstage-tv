@@ -72,10 +72,6 @@ def is_safe_url(target):
     return test_url.scheme in ("http", "https") and ref_url.netloc == test_url.netloc
 
 
-class IncompatibleCacheError(RuntimeError):
-    pass
-
-
 @dataclass
 class ItineraryField:
     key: str
@@ -332,7 +328,7 @@ def create_app(
         cal.add("PRODID", "-//amigotext//NONSGML amigotext.app.event//EN")
         cal.add("VERSION", "2.0")
         hostname = urlparse(request.base_url).hostname
-        days = request.args.get("days", "donderdag;vrijdag;zaterdag;zondag").split(";")
+        days = request.args.get("days", "woensdag;donderdag;vrijdag;zaterdag;zondag").split(";")
         programme = make_legacy_programme("AMIGO")
         itinerary = make_legacy_itinerary()
         for key, act in programme["acts"].items():
