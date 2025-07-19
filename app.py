@@ -541,5 +541,4 @@ def act_datestr_to_datetime(datestr: str):
 
 def festival_weekday(timepoint: datetime.datetime):
     """Returns the `datetime` day of week for a timepoint, assuming 06:00 for start of new day"""
-    shifted_timestamp = timepoint.timestamp() - 6 * 3600
-    return datetime.datetime.fromtimestamp(shifted_timestamp).weekday()
+    return (timepoint - datetime.timedelta(hours=6)).weekday()
