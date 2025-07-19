@@ -7,7 +7,6 @@ import datetime
 import subprocess
 import pathlib
 from typing import OrderedDict, Any
-from functools import cmp_to_key
 import os
 from dataclasses import dataclass
 import uuid
@@ -234,46 +233,19 @@ def create_app(
         """Main page handler"""
         programme = make_legacy_programme("AMIGO")
         acts_by_day = OrderedDict()
-        # pre-add days to ensure correct order
-        for day in ("dinsdag", "woensdag", "donderdag", "vrijdag", "zaterdag", "zondag"):
-            acts_by_day[day] = {}
 
-        def compare_show_times(
-            act1: tuple[str, dict[str, Any]], act2: tuple[str, dict[str, Any]]
-        ) -> int:
-            """Compare show times, assuming next day at 06:00 instead of midnight"""
-            act1_shows = act1[1]["shows"]
-            act2_shows = act2[1]["shows"]
-            if not act1_shows or not act2_shows:
-                return 0
+        def get_first_show_start_utc(item: tuple[str, dict[str, Any]]):
+            shows: list[dict[str, str]] = item[1]["shows"]
+            return sorted(shows, key=lambda show: show["start_utc"])[0]["start_utc"]
 
-            start1 = act1_shows[0]["start"]
-            start2 = act2_shows[0]["start"]
-
-            if start1 == start2:
-                return 0
-
-            next_festival_day = "06:00"
-            if start1 < start2:
-                if start1 < next_festival_day and start2 >= next_festival_day:
-                    # greater than (because one show is past midnight,
-                    # but still same evening)
-                    return 1
-                return -1
-            else:
-                if start1 >= next_festival_day and start2 < next_festival_day:
-                    # lesser than (because one show is past midnight,
-                    # but still same evening)
-                    return -1
-                return 1
-
-        acts = OrderedDict(sorted(programme["acts"].items(), key=cmp_to_key(compare_show_times)))
+        acts = OrderedDict(sorted(programme["acts"].items(), key=get_first_show_start_utc))
 
         for key, act in acts.items():
             for show in act["shows"]:
                 day = show["day"]
+                if day not in acts_by_day:
+                    acts_by_day[day] = {}
                 if key not in acts_by_day[day]:
-                    assert day in acts_by_day
                     acts_by_day[day][key] = act.copy()
 
         fetch_time = programme.get("fetch_time", None)
@@ -300,14 +272,14 @@ def create_app(
         response = make_response(programme)
         return response
 
-    def make_legacy_programme(stage=None):
+    def make_legacy_programme(stage=None) -> dict[str, dict[str, Any]]:
         """Returns the programme (combined descriptions and itinerary) in legacy format
 
         This is the format which is still used by the data entry frontend and the AmigoText itself.
         """
         fallback = "Sorry, we konden de beschrijving niet ophalen. :-(\n Laat je verrassen!"
         with acts_storage.lock() as acts, programme_storage.lock() as programme:
-            legacy_programme: dict[str, dict[str, str]] = {}
+            legacy_programme: dict[str, dict[str, Any]] = {}
             legacy_programme["acts"] = legacy_acts = {}
 
             # Use acts as lead (as this comes from the production planner)
@@ -321,7 +293,7 @@ def create_app(
                     html = fallback
 
                 shows = []
-                legacy_acts[key] = legacy_act = {
+                legacy_act = {
                     "name": act["name"],
                     "shows": shows,
                     "description_html": html,
