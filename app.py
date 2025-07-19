@@ -112,17 +112,19 @@ def create_app(
 
     api = zpfwebsite.Api(app.config["ZPF_API_URL"] if app.config["UPDATE_PROGRAMME"] else "")
 
+    programme_schema_major = 2
+
     def programme_validator(programme: dict[str, Any]) -> bool:
         try:
             major, minor = programme["schema_version"].split(".")
-            if int(major) < 1:
+            if int(major) < programme_schema_major:
                 return False
         except KeyError:
             return False
         return True
 
     programme_storage = storage.CachedStorage[dict[str, Any], str](
-        {"schema_version": "1.0", "acts": {}},
+        {"schema_version": f"{programme_schema_major}.0", "acts": {}},
         "programme_cache.json",
         app.open_instance_resource,
         validator=programme_validator,
