@@ -5,7 +5,9 @@ def test_programme(session):
     programme = session.get("programme").json()
     acts = programme["acts"]
     assert acts["foo"]["name"] == "Foo"
+    assert acts["foo"]["description"] == "Description of Foo"
     assert acts["bar"]["name"] == "Bar"
+    assert acts["bar"]["description"] == "Description of Bar"
 
 
 def test_itinerary(session):
