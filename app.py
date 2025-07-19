@@ -235,7 +235,7 @@ def create_app(
         programme = make_legacy_programme("AMIGO")
         acts_by_day = OrderedDict()
         # pre-add days to ensure correct order
-        for day in ("woensdag", "donderdag", "vrijdag", "zaterdag", "zondag"):
+        for day in ("dinsdag", "woensdag", "donderdag", "vrijdag", "zaterdag", "zondag"):
             acts_by_day[day] = {}
 
         def compare_show_times(
@@ -301,22 +301,32 @@ def create_app(
         return response
 
     def make_legacy_programme(stage=None):
+        """Returns the programme (combined descriptions and itinerary) in legacy format
+
+        This is the format which is still used by the data entry frontend and the AmigoText itself.
+        """
         fallback = "Sorry, we konden de beschrijving niet ophalen. :-(\n Laat je verrassen!"
         with acts_storage.lock() as acts, programme_storage.lock() as programme:
-            legacy_programme = programme.copy()
-            legacy_acts: dict[str, dict[str, Any]] = legacy_programme["acts"]
-            for legacy_act in legacy_acts.values():
-                if legacy_act.get("description_html") is None:
-                    legacy_act["description_html"] = fallback
-                legacy_act["description"] = _html_description_to_text(
-                    legacy_act["description_html"]
-                )
+            legacy_programme: dict[str, dict[str, str]] = {}
+            legacy_programme["acts"] = legacy_acts = {}
+
+            # Use acts as lead (as this comes from the production planner)
             for act in acts:
                 key = str(act["id"])
-                legacy_act = legacy_acts.get(key, {})
-                legacy_act["name"] = act["name"]
+                try:
+                    html = programme["acts"][key]["description_html"]
+                    if html is None:
+                        html = fallback
+                except KeyError:
+                    html = fallback
+
                 shows = []
-                legacy_act["shows"] = shows
+                legacy_acts[key] = legacy_act = {
+                    "name": act["name"],
+                    "shows": shows,
+                    "description_html": html,
+                    "description": _html_description_to_text(html),
+                }
                 timeline: list[dict[str, Any]] = act["timeline"]
                 for event in timeline:
                     if event["type"] == "Showtime":
