@@ -1,8 +1,8 @@
 """Common fixtures"""
 
-import multiprocessing
-import pathlib
-import tempfile
+import subprocess
+from contextlib import contextmanager
+from pathlib import Path
 import shutil
 import time
 
@@ -10,11 +10,11 @@ import pytest
 import requests
 import urllib.parse
 import bs4
-import app as flask_app
 
 
-TEST_DIR = pathlib.Path(__file__).parent
+TEST_DIR = Path(__file__).parent
 INSTANCE_DIR = TEST_DIR / "instance"
+ROOT_DIR = TEST_DIR.parent
 
 
 class SessionWithBaseUrl(requests.Session):
@@ -62,31 +62,35 @@ def create_session(host):
     return session
 
 
-@pytest.fixture
-def app():
-    # copy instance data to a tempdir, so that we always start app with same state
-    with tempfile.TemporaryDirectory() as temp_instance:
-        shutil.copytree(INSTANCE_DIR, temp_instance, dirs_exist_ok=True)
-        the_app = flask_app.create_app(
-            instance_path=temp_instance, config_filename=TEST_DIR / "settings.py"
-        )
-        process = multiprocessing.Process(target=the_app.run)
-        process.start()
+@contextmanager
+def app_process(tmp_path: Path, virgin=False):
+    if not virgin:
+        # copy instance data to a tempdir, so that we always start app with same state
+        shutil.copytree(INSTANCE_DIR, tmp_path, dirs_exist_ok=True)
+
+    config = (TEST_DIR / "settings.py").absolute()
+    with subprocess.Popen(
+        [
+            "flask",
+            "--app",
+            f'app:create_app(instance_path="{str(tmp_path)}",config_filename="{str(config)}")',
+            "run",
+        ],
+        cwd=ROOT_DIR,
+    ) as p:
         time.sleep(2)
+        assert p.poll() is None
         yield
-        process.terminate()
-        process.join()
+        p.kill()
 
 
 @pytest.fixture
-def app_virgin():
-    with tempfile.TemporaryDirectory() as temp_instance:
-        the_app = flask_app.create_app(
-            instance_path=temp_instance, config_filename=TEST_DIR / "settings.py"
-        )
-        process = multiprocessing.Process(target=the_app.run)
-        process.start()
-        time.sleep(2)
+def app(tmp_path):
+    with app_process(tmp_path):
         yield
-        process.terminate()
-        process.join()
+
+
+@pytest.fixture
+def app_virgin(tmp_path):
+    with app_process(tmp_path, virgin=True):
+        yield
