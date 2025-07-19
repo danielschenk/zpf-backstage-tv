@@ -5,12 +5,12 @@ updates:
     schedule:
       interval: "monthly"
     groups:
-      default:
+      pip:
         dependency-type: production
   - package-ecosystem: "github-actions"
     directory: "/"
     schedule:
       interval: "monthly"
     groups:
-      default:
+      github-actions:
         dependency-type: production
