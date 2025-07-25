@@ -25,7 +25,7 @@ import sentry_sdk
 import bs4
 
 import zpfwebsite
-
+from src.productionplanner import remove_friends_night_tag
 
 APP_DIR = pathlib.Path(__file__).parent
 DEFAULT_INSTANCE_PATH = APP_DIR / "instance"
@@ -188,7 +188,7 @@ def create_app(
             if website_acts is None:
                 continue
 
-            name = act["name"].split(" @ Vrienden")[0].strip()
+            name = remove_friends_night_tag(act["name"])
             for website_act in website_acts:
                 website_act["ratio"] = SequenceMatcher(
                     None, name.lower(), website_act["title"].lower()
