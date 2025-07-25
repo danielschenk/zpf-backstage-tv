@@ -9,19 +9,19 @@
         <button onclick="resetUtc()">Reset</button>
     </div>
     <ul class="navigation">
-    {% for day in acts_by_day %}
-    {{ macros.nav_button(day[:2]|upper, "#" + day) }}
-    {% endfor %}
+        {% for day in acts_by_day %}
+        {{ macros.nav_button(day[:2]|upper, "#" + day) }}
+        {% endfor %}
         <li class="filler-item"></li>
-    {{ macros.nav_button("calendar_month", "/generate-ical-url", "material-symbols-outlined") }}
-    {{ macros.nav_button("info", "#info", "material-symbols-outlined") }}
+        {{ macros.nav_button("calendar_month", "/generate-ical-url", "material-symbols-outlined") }}
+        {{ macros.nav_button("info", "#info", "material-symbols-outlined") }}
     </ul>
     <div class="navigation-margin"></div>
     {% for day in acts_by_day %}
     <div class="pane" id="pane-{{ day }}">
         <table>
             <tbody>
-            {% for key, act in acts_by_day[day].items() %}
+                {% for key, act in acts_by_day[day].items() %}
                 <tr class="act-name">
                     <td colspan="2" class="act-name">{{ act["name"] }}</td>
                 </tr>
@@ -30,19 +30,19 @@
                     <td class="act-detail">
                         <ul>
                             {% for show in act["shows"] %}
-                                <li class="showtime" start=" {{ show['start_utc'] }} " end=" {{ show['end_utc'] }} ">
-                                    {{ show["start"] }} - {{ show["end"] }}
-                                    <div class="showtime-annotation started">
-                                        <span class="speaker">🔊</span>
-                                        <span class="mirror-animated">🕺</span>
-                                    </div>
-                                    <div class="showtime-annotation almost-starting">
-                                        ⏱ <div class="time-left">Starts in <span class="time-left-value">?</span></div>
-                                    </div>
-                                    <div class="showtime-annotation almost-ending">
-                                        <div class="time-left">Ends in <span class="time-left-value">?</span></div>
-                                    </div>
-                                </li>
+                            <li class="showtime" start=" {{ show['start_utc'] }} " end=" {{ show['end_utc'] }} ">
+                                {{ show["start"] }} - {{ show["end"] }}
+                                <div class="showtime-annotation started">
+                                    <span class="speaker">🔊</span>
+                                    <span class="mirror-animated">🕺</span>
+                                </div>
+                                <div class="showtime-annotation almost-starting">
+                                    ⏱ <div class="time-left">Starts in <span class="time-left-value">?</span></div>
+                                </div>
+                                <div class="showtime-annotation almost-ending">
+                                    <div class="time-left">Ends in <span class="time-left-value">?</span></div>
+                                </div>
+                            </li>
                             {% endfor %}
                         </ul>
                     </td>
@@ -52,50 +52,44 @@
                     <td>
                         <div class="dressing-room-buttons">
                             {% for room in ["1", "2", "3", "4", "5", "6", "None"] %}
-                                <button
-                                    onclick="setDressingRoom('{{ key }}', '{{ room }}')"
-                                    class="data-entry dressing-room act-{{ key }}"
-                                    id="{{ key }}-{{ room }}"
-                                >
-                                    {{ room }}
-                                </button>
+                            <button onclick="setDressingRoom('{{ key }}', '{{ room }}')"
+                                class="data-entry dressing-room act-{{ key }}" id="{{ key }}-{{ room }}">
+                                {{ room }}
+                            </button>
                             {% endfor %}
                             <input id="{{ key }}-custom-room" />
-                            <button
-                                onclick="setCustomDressingRoom('{{ key }}')"
-                                class="data-entry dressing-room act-{{ key }}"
-                                id="{{ key }}-custom-room-button"
-                                placeholder="custom"
-                            >
+                            <button onclick="setCustomDressingRoom('{{ key }}')"
+                                class="data-entry dressing-room act-{{ key }}" id="{{ key }}-custom-room-button"
+                                placeholder="custom">
                                 Custom
                             </button>
                             <div class="dressing-room-loader act-{{ key }}">
-                                <img
-                                    src="{{ url_for('static', filename='icons8-dots-loading.gif') }}"
-                                    class="dressing-room-loader"
-                                />
+                                <img src="{{ url_for('static', filename='icons8-dots-loading.gif') }}"
+                                    class="dressing-room-loader" />
                             </div>
                         </div>
                     </td>
                 </tr>
                 {% for field in free_fields %}
-                <tr>
-                    <td class="act-detail-header">{{ field.display_name }}: </td>
-                    <td>
-                        <div class="dressing-room-buttons">
-                            <input class="free-field" id="{{ key }}-{{ field.key }}" data-act="{{ key }}" data-field="{{ field.key }}" type="{{ field.type }}">
-                            <button class="data-entry" onclick="setItineraryItem('{{key}}', '{{ field.key }}')">Save</button>
-                            <div class="dressing-room-loader act-{{ key }}">
-                                <img
-                                    src="{{ url_for('static', filename='icons8-dots-loading.gif') }}"
-                                    class="dressing-room-loader"
-                                />
+                <div style="visibility: {{ 'block' if field.visible_for(act) else 'none' }};">
+                    <tr>
+                        <td class="act-detail-header">{{ field.display_name }}: </td>
+                        <td>
+                            <div class="dressing-room-buttons">
+                                <input class="free-field" id="{{ key }}-{{ field.key }}" data-act="{{ key }}"
+                                    data-field="{{ field.key }}" type="{{ field.type }}">
+                                <button class="data-entry"
+                                    onclick="setItineraryItem('{{key}}', '{{ field.key }}')">Save</button>
+                                <div class="dressing-room-loader act-{{ key }}">
+                                    <img src="{{ url_for('static', filename='icons8-dots-loading.gif') }}"
+                                        class="dressing-room-loader" />
+                                </div>
                             </div>
-                        </div>
-                    </td>
-                </tr>
+                        </td>
+                    </tr>
+                </div>
                 {% endfor %}
-            {% endfor %}
+                {% endfor %}
             </tbody>
         </table>
     </div>
@@ -121,9 +115,9 @@
             Loading icon by <a href="https://icons8.com">icons8</a>.
         </span>
         <div class="centered">
-            <img src="{{ url_for('static', filename='logo.png') }}", width="800"/>
+            <img src="{{ url_for('static', filename='logo.png') }}" , width="800" />
         </div>
     </div>
 
-    <script src="{{ url_for('static', filename="index.js") }}"></script>
+    <script src="{{ url_for('static', filename='index.js') }}"></script>
 </body>

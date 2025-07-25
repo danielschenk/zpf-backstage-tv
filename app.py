@@ -78,6 +78,21 @@ class ItineraryField:
     display_name: str
     type: str = "text"
 
+    def visible_for(self, act: dict[str, Any]) -> bool:
+        return True
+
+    @property
+    def class_name(self) -> str:
+        return self.__class__.__name__
+
+
+class WebsiteActNameField(ItineraryField):
+    def __init__(self, *args, **kwargs):
+        super().__init__("website_act_name", "Act name on website", *args, **kwargs)
+
+    def visible_for(self, act: dict[str, Any]) -> bool:
+        return not act["description_available"]
+
 
 def create_app(
     instance_path=DEFAULT_INSTANCE_PATH, config_filename=DEFAULT_INSTANCE_PATH / "settings.py"
@@ -254,7 +269,7 @@ def create_app(
 
         dev_mode_display = "block" if "devMode" in request.args else "none"
 
-        free_fields = []
+        free_fields = [WebsiteActNameField()]
         return render_template(
             "index.html",
             acts_by_day=acts_by_day,
@@ -296,6 +311,7 @@ def create_app(
                     "shows": shows,
                     "description_html": html,
                     "description": _html_description_to_text(html),
+                    "description_available": html != fallback,
                 }
                 timeline: list[dict[str, Any]] = act["timeline"]
                 for event in timeline:
