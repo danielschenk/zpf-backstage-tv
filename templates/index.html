@@ -71,23 +71,23 @@
                     </td>
                 </tr>
                 {% for field in free_fields %}
-                <div style="visibility: {{ 'block' if field.visible_for(act) else 'none' }};">
-                    <tr>
-                        <td class="act-detail-header">{{ field.display_name }}: </td>
-                        <td>
-                            <div class="dressing-room-buttons">
-                                <input class="free-field" id="{{ key }}-{{ field.key }}" data-act="{{ key }}"
-                                    data-field="{{ field.key }}" type="{{ field.type }}">
-                                <button class="data-entry"
-                                    onclick="setItineraryItem('{{key}}', '{{ field.key }}')">Save</button>
-                                <div class="dressing-room-loader act-{{ key }}">
-                                    <img src="{{ url_for('static', filename='icons8-dots-loading.gif') }}"
-                                        class="dressing-room-loader" />
-                                </div>
+                {% if field.visible_for(act) %}
+                <tr>
+                    <td class="act-detail-header">{{ field.display_name }}: </td>
+                    <td>
+                        <div class="dressing-room-buttons">
+                            <input class="free-field" id="{{ key }}-{{ field.key }}" data-act="{{ key }}"
+                                data-field="{{ field.key }}" type="{{ field.type }}">
+                            <button class="data-entry"
+                                onclick="setItineraryItem('{{key}}', '{{ field.key }}')">Save</button>
+                            <div class="dressing-room-loader act-{{ key }}">
+                                <img src="{{ url_for('static', filename='icons8-dots-loading.gif') }}"
+                                    class="dressing-room-loader" />
                             </div>
-                        </td>
-                    </tr>
-                </div>
+                        </div>
+                    </td>
+                </tr>
+                {% endif %}
                 {% endfor %}
                 {% endfor %}
             </tbody>

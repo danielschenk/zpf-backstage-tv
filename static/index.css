@@ -135,6 +135,10 @@ td.day {
     padding: 0.25em 0em;
 }
 
+div#free-field-WebsiteActName {
+    display: none;
+}
+
 li.showtime.started {
     color: var(--button-active-color);
     font-weight: 800;
@@ -162,12 +166,17 @@ div.time-left {
 
 .mirror-animated.mirrored {
     display: inline-block;
-    -moz-transform:    scaleX(-1); /* Gecko */
-    -o-transform:      scaleX(-1); /* Opera */
-    -webkit-transform: scaleX(-1); /* Webkit */
-    transform:         scaleX(-1); /* Standard */
+    -moz-transform: scaleX(-1);
+    /* Gecko */
+    -o-transform: scaleX(-1);
+    /* Opera */
+    -webkit-transform: scaleX(-1);
+    /* Webkit */
+    transform: scaleX(-1);
+    /* Standard */
 
-    filter: FlipH;                 /* IE 6/7/8 */
+    filter: FlipH;
+    /* IE 6/7/8 */
 }
 
 ul.navigation {

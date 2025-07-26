@@ -2,6 +2,7 @@
 
 """Flask app which serves as the backend for the Zomerparkfeest Amigo backstage TV"""
 
+from collections import defaultdict
 import threading
 import datetime
 import subprocess
@@ -87,11 +88,23 @@ class ItineraryField:
 
 
 class WebsiteActNameField(ItineraryField):
+    """Special field shown for acts which could not be matched to website act
+
+    With this input field, the act name as used on the public website can be entered to make
+    description fetching possible.
+    """
+
     def __init__(self, *args, **kwargs):
         super().__init__("website_act_name", "Act name on website", *args, **kwargs)
 
     def visible_for(self, act: dict[str, Any]) -> bool:
         return not act["description_available"]
+
+
+@dataclass
+class DescriptionItem:
+    description: str | None = None
+    name_match: bool = False
 
 
 def create_app(
@@ -193,11 +206,9 @@ def create_app(
         with acts_storage.lock() as acts:
             acts_copy = acts.copy()
 
-        descriptions: dict[str, str | None] = {}
+        descriptions = defaultdict(DescriptionItem)
         for act in acts_copy:
             key = str(act["id"])
-            if key not in descriptions:
-                descriptions[key] = None
             if not any(event["stage"] == "Amigo" for event in act["timeline"]):
                 continue
             if website_acts is None:
@@ -210,20 +221,31 @@ def create_app(
                 ).ratio()
             best = max(website_acts, key=lambda x: x["ratio"])
             if best["ratio"] < 0.8:
-                logger.error(f"could not match '{name}' to any of website's acts")
-                continue
+                description = get_description_by_corrected_name(key)
+                if description is None:
+                    logger.error(f"could not match '{name}' to any of website's acts")
+                    descriptions[key].name_match = False
+                    continue
+            else:
+                description = best["description"]
 
-            descriptions[key] = best["description"]
+            descriptions[key].name_match = True
+            descriptions[key].description = description
 
         with programme_storage.lock() as programme:
             programme_acts = programme.get("acts", {})
             assert isinstance(programme_acts, dict)
-            for key, description in descriptions.items():
+            for key, item in descriptions.items():
                 if key not in programme_acts:
                     programme_acts[key] = {}
                 act = programme_acts[key]
-                act["description_html"] = description
+                act["description_html"] = item.description
+                act["name_matched_to_website"] = item.name_match
             programme_storage.save()
+
+    def get_description_by_corrected_name(key: str) -> str | None:
+
+        return None
 
     if app.config["UPDATE_PROGRAMME"]:
         # make sure we always do one at startup, but don't block server
