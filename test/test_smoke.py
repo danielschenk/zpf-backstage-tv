@@ -1,5 +1,7 @@
 """Smoke tests"""
 
+from icalendar import Calendar
+
 
 def test_programme(session):
     programme = session.get("programme").json()
@@ -29,3 +31,15 @@ def test_programme_virgin(session_virgin):
 
 def test_itinerary_virgin(session_virgin):
     session_virgin.get("itinerary").json()
+
+
+def test_icalendar(session):
+    calendar = Calendar.from_ical(session.get("programme.ics").text)
+    act_names = [event.get("SUMMARY") for event in calendar.events]
+    assert "Foo" in act_names
+    assert "Bar" in act_names
+
+
+def test_icalendar_virgin(session_virgin):
+    calendar = Calendar.from_ical(session_virgin.get("programme.ics").text)
+    assert len(calendar.events) == 0

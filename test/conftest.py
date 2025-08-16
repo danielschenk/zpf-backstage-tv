@@ -78,7 +78,7 @@ def app_process(tmp_path: Path, virgin=False):
         ],
         cwd=ROOT_DIR,
     ) as p:
-        time.sleep(2)
+        time.sleep(3)
         assert p.poll() is None
         yield
         p.kill()
