@@ -10,7 +10,7 @@ from typing import OrderedDict, Any
 import os
 from dataclasses import dataclass
 import uuid
-from urllib.parse import urlparse, urljoin
+from urllib.parse import urlparse
 import logging
 from difflib import SequenceMatcher
 import flask
@@ -26,6 +26,7 @@ import bs4
 
 import zpfwebsite
 from src.productionplanner import remove_friends_night_tag
+from src.util import is_safe_url
 
 APP_DIR = pathlib.Path(__file__).parent
 DEFAULT_INSTANCE_PATH = APP_DIR / "instance"
@@ -60,18 +61,6 @@ def get_version():
             return subprocess.check_output(cmd).strip().decode("utf-8")
         except subprocess.CalledProcessError:
             return "unknown"
-
-
-def is_safe_url(target):
-    """Tests if target is safe to redirect to
-
-    Improved to handle browser quirks and malformed URLs.
-    """
-    # Remove backslashes, which browsers treat as slashes
-    target = target.replace('\\', '')
-    parsed = urlparse(target)
-    # Only allow relative URLs (no scheme, no netloc)
-    return not parsed.scheme and not parsed.netloc
 
 
 @dataclass
@@ -440,7 +429,6 @@ def create_app(
 
             next = flask.request.args.get("next")
             if not next or not is_safe_url(next):
-                # If next is not safe, redirect to home page
                 return flask.redirect(flask.url_for("serve_index"))
             return flask.redirect(next)
         return flask.render_template("login.html", form=form)
