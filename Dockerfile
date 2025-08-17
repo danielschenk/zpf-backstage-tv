@@ -24,4 +24,5 @@ USER $USERNAME
 
 ENV HOST=127.0.0.1
 ENV PORT=8080
-ENTRYPOINT ["waitress-serve", "--host=$HOST", "--port=$PORT", "--call", "app:create_app"]
+SHELL ["/bin/bash", "-c"]
+ENTRYPOINT waitress-serve --host=$HOST --port=$PORT --call app:create_app
