@@ -1,4 +1,4 @@
-FROM python:3.13
+FROM python:3.13-slim
 
 COPY requirements.txt .
 RUN pip install -U --no-cache-dir pip \
@@ -24,4 +24,4 @@ USER $USERNAME
 
 ENV HOST=127.0.0.1
 ENV PORT=8080
-ENTRYPOINT waitress-serve --host=$HOST --port=$PORT --call app:create_app
+ENTRYPOINT ["waitress-serve", "--host=$HOST", "--port=$PORT", "--call", "app:create_app"]

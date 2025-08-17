@@ -9,6 +9,12 @@ on:
   pull_request:
     branches:
       - 'master'
+  schedule:
+    - cron: '17 8 * * 0'
+
+concurrency:
+  group: ${{ github.ref }}
+  cancel-in-progress: ${{ github.ref != 'refs/heads/master' }}
 
 jobs:
   test:
@@ -37,7 +43,8 @@ jobs:
     runs-on: ubuntu-latest
 
     env:
-      have_secrets: ${{ secrets.DOCKERHUB_USERNAME != '' }}
+      REGISTRY: ghcr.io
+      IMAGENAME: ghcr.io/${{ github.repository }}/zpf-backstage-tv
 
     steps:
     - name: Checkout
@@ -48,7 +55,7 @@ jobs:
       uses: docker/metadata-action@v5
       with:
         images: |
-          danielschenk/zpf-backstage-tv
+          ${{ env.IMAGENAME }}
         # generate Docker tags based on the following events/attributes
         tags: |
           type=ref,event=branch
@@ -65,49 +72,27 @@ jobs:
       uses: docker/setup-buildx-action@v3
 
     - name: Login to DockerHub
-      if: ${{ env.have_secrets == 'true' }}
       uses: docker/login-action@v3
       with:
-        username: ${{ secrets.DOCKERHUB_USERNAME }}
-        password: ${{ secrets.DOCKERHUB_TOKEN }}
+        registry: ${{ env.REGISTRY }}
+        username: ${{ github.actor }}
+        password: ${{ secrets.GITHUB_TOKEN }}
 
     - name: Determine version string
       run: echo "VERSION=$(git describe --always --match 'v*' --dirty)" >> $GITHUB_ENV
 
     - name: Build and push Docker images
       uses: docker/build-push-action@v6
-      if: ${{ env.have_secrets == 'true' }}
       with:
         context: .
         build-args: |
           VERSION=${{ env.VERSION }}
-        platforms: linux/386,linux/amd64,linux/arm64,linux/arm/v7
+        platforms: linux/amd64,linux/arm64
         push: true
         tags: ${{ steps.meta.outputs.tags }}
         labels: ${{ steps.meta.outputs.labels }}
-        cache-from: type=registry,ref=danielschenk/zpf-backstage-tv:buildcache
-        cache-to: type=registry,ref=danielschenk/zpf-backstage-tv:buildcache,mode=max
-
-    - name: Build and push Docker images (no push)
-      uses: docker/build-push-action@v6
-      if: ${{ env.have_secrets != 'true' }}
-      with:
-        context: .
-        build-args: |
-          VERSION=${{ env.VERSION }}
-        platforms: linux/386,linux/amd64,linux/arm64,linux/arm/v7
-        push: false
-        tags: ${{ steps.meta.outputs.tags }}
-        labels: ${{ steps.meta.outputs.labels }}
-        cache-from: type=registry,ref=danielschenk/zpf-backstage-tv:buildcache
-
-    - name: Update repo description
-      uses: peter-evans/dockerhub-description@v4
-      if: github.event_name == 'push' && github.ref == 'refs/heads/master'
-      with:
-        username: ${{ secrets.DOCKERHUB_USERNAME }}
-        password: ${{ secrets.DOCKERHUB_TOKEN }}
-        repository: danielschenk/zpf-backstage-tv
+        cache-from: type=registry,ref=${{ env.IMAGENAME }}:buildcache
+        cache-to: type=registry,ref=${{ env.IMAGENAME }}:buildcache,mode=max
 
   # needed by test results workflow
   event_file:
