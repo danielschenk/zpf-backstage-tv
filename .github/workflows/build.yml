@@ -79,7 +79,12 @@ jobs:
         password: ${{ secrets.GITHUB_TOKEN }}
 
     - name: Determine version string
-      run: echo "VERSION=$(git describe --always --tags --match 'v*' --dirty)" >> $GITHUB_ENV
+      run: |
+        VERSION=$(git describe --tags --match 'v*' --dirty)
+        echo "determined version: $VERSION"
+        # simple sanity check
+        echo $VERSION | grep "^v"
+        echo "VERSION=$VERSION" >> $GITHUB_ENV
 
     - name: Build and push Docker images
       uses: docker/build-push-action@v6
