@@ -65,11 +65,13 @@ def get_version():
 def is_safe_url(target):
     """Tests if target is safe to redirect to
 
-    Source: https://stackoverflow.com/a/61446498
+    Improved to handle browser quirks and malformed URLs.
     """
-    ref_url = urlparse(request.host_url)
-    test_url = urlparse(urljoin(request.host_url, target))
-    return test_url.scheme in ("http", "https") and ref_url.netloc == test_url.netloc
+    # Remove backslashes, which browsers treat as slashes
+    target = target.replace('\\', '')
+    parsed = urlparse(target)
+    # Only allow relative URLs (no scheme, no netloc)
+    return not parsed.scheme and not parsed.netloc
 
 
 @dataclass
@@ -437,10 +439,10 @@ def create_app(
             flask.flash("Logged in successfully.")
 
             next = flask.request.args.get("next")
-            if not is_safe_url(next):
-                return flask.abort(400)
-
-            return flask.redirect(next or flask.url_for("serve_index"))
+            if not next or not is_safe_url(next):
+                # If next is not safe, redirect to home page
+                return flask.redirect(flask.url_for("serve_index"))
+            return flask.redirect(next)
         return flask.render_template("login.html", form=form)
 
     return app
