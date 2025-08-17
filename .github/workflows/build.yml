@@ -10,6 +10,10 @@ on:
     branches:
       - 'master'
 
+concurrency:
+  group: ${{ github.ref }}
+  cancel-in-progress: ${{ github.ref != 'refs/heads/master' }}
+
 jobs:
   test:
     runs-on: ubuntu-latest
@@ -81,7 +85,7 @@ jobs:
         context: .
         build-args: |
           VERSION=${{ env.VERSION }}
-        platforms: linux/386,linux/amd64,linux/arm64,linux/arm/v7
+        platforms: linux/amd64,linux/arm64
         push: true
         tags: ${{ steps.meta.outputs.tags }}
         labels: ${{ steps.meta.outputs.labels }}
