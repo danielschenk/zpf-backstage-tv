@@ -10,7 +10,7 @@ from typing import OrderedDict, Any
 import os
 from dataclasses import dataclass
 import uuid
-from urllib.parse import urlparse, urljoin
+from urllib.parse import urlparse
 import logging
 from difflib import SequenceMatcher
 import flask
@@ -26,6 +26,7 @@ import bs4
 
 import zpfwebsite
 from src.productionplanner import remove_friends_night_tag
+from src.util import is_safe_url
 
 APP_DIR = pathlib.Path(__file__).parent
 DEFAULT_INSTANCE_PATH = APP_DIR / "instance"
@@ -60,16 +61,6 @@ def get_version():
             return subprocess.check_output(cmd).strip().decode("utf-8")
         except subprocess.CalledProcessError:
             return "unknown"
-
-
-def is_safe_url(target):
-    """Tests if target is safe to redirect to
-
-    Source: https://stackoverflow.com/a/61446498
-    """
-    ref_url = urlparse(request.host_url)
-    test_url = urlparse(urljoin(request.host_url, target))
-    return test_url.scheme in ("http", "https") and ref_url.netloc == test_url.netloc
 
 
 @dataclass
@@ -344,7 +335,7 @@ def create_app(
                     try:
                         reminders.append(ReminderDefinition.from_urlparam(value))
                     except ValueError:
-                        return Response(f"Error in reminder definition: '{value}'", status=400)
+                        return Response("Error in reminder definition", status=400)
                 if not reminders:
                     reminders.append(ReminderDefinition("start_utc", -6))
                     reminders.append(ReminderDefinition("end_utc", -6))
@@ -436,11 +427,10 @@ def create_app(
 
             flask.flash("Logged in successfully.")
 
-            next = flask.request.args.get("next")
-            if not is_safe_url(next):
-                return flask.abort(400)
-
-            return flask.redirect(next or flask.url_for("serve_index"))
+            next = flask.request.args.get("next", "").replace("\\", "/")
+            if not next or not is_safe_url(next):
+                return flask.redirect(flask.url_for("serve_index"))
+            return flask.redirect(next)
         return flask.render_template("login.html", form=form)
 
     return app
