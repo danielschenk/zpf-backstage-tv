@@ -335,7 +335,7 @@ def create_app(
                     try:
                         reminders.append(ReminderDefinition.from_urlparam(value))
                     except ValueError:
-                        return Response(f"Error in reminder definition: '{value}'", status=400)
+                        return Response("Error in reminder definition", status=400)
                 if not reminders:
                     reminders.append(ReminderDefinition("start_utc", -6))
                     reminders.append(ReminderDefinition("end_utc", -6))
