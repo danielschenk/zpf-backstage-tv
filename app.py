@@ -427,7 +427,7 @@ def create_app(
 
             flask.flash("Logged in successfully.")
 
-            next = flask.request.args.get("next")
+            next = flask.request.args.get("next", "").replace("\\", "/")
             if not next or not is_safe_url(next):
                 return flask.redirect(flask.url_for("serve_index"))
             return flask.redirect(next)
