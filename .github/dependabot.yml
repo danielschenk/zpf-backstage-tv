@@ -4,6 +4,8 @@ updates:
     directory: "/"
     schedule:
       interval: "monthly"
+    commit-message:
+      prefix: chore
     groups:
       pip:
         dependency-type: production
@@ -11,6 +13,8 @@ updates:
     directory: "/"
     schedule:
       interval: "monthly"
+    commit-message:
+      prefix: chore
     groups:
       github-actions:
         dependency-type: production
