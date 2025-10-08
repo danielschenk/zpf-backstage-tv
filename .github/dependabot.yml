@@ -5,7 +5,7 @@ updates:
     schedule:
       interval: "monthly"
     commit-message:
-      prefix: chore
+      prefix: chore(deps)
     groups:
       pip:
         dependency-type: production
@@ -14,7 +14,7 @@ updates:
     schedule:
       interval: "monthly"
     commit-message:
-      prefix: chore
+      prefix: chore(deps)
     groups:
       github-actions:
         dependency-type: production
