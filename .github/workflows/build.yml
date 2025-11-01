@@ -35,7 +35,7 @@ jobs:
     - run: python3 -m pytest --junitxml=test-report.xml
     - name: Upload Test Results
       if: always()
-      uses: actions/upload-artifact@v4
+      uses: actions/upload-artifact@v5
       with:
         name: Test Results
         path: |
@@ -109,7 +109,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - name: Upload
-      uses: actions/upload-artifact@v4
+      uses: actions/upload-artifact@v5
       with:
         name: Event File
         path: ${{ github.event_path }}
