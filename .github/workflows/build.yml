@@ -1,6 +1,4 @@
 name: build
-permissions:
-  packages: write
 
 on:
   push:
@@ -43,6 +41,9 @@ jobs:
 
   docker:
     runs-on: ubuntu-latest
+
+    permissions:
+      packages: write
 
     env:
       REGISTRY: ghcr.io
