@@ -1,5 +1,5 @@
 requests==2.32.5
-beautifulsoup4==4.14.2
+beautifulsoup4==4.14.3
 filelock==3.20.0
 apscheduler==3.11.1
 flask==3.1.2
@@ -7,5 +7,5 @@ Flask-Bootstrap==3.3.7.1
 Flask-Login==0.6.3
 Flask-WTF==1.2.2
 waitress==3.0.2
-icalendar==6.3.1
-sentry-sdk[flask]==2.43.0
+icalendar==6.3.2
+sentry-sdk[flask]==2.46.0
