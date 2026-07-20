@@ -193,8 +193,26 @@ def docker_app_container(tmp_path: Path, docker_image: str, virgin=False):
 
 @pytest.fixture
 def docker_image():
-    """Get Docker image name from environment or use default."""
-    return os.environ.get("DOCKER_IMAGE", "zpf-backstage-tv:latest")
+    """Get Docker image name from environment or skip tests if not available."""
+    docker_image = os.environ.get("DOCKER_IMAGE")
+    
+    if docker_image is None:
+        # Check if the default image exists
+        try:
+            result = subprocess.run(
+                ["docker", "image", "inspect", "zpf-backstage-tv:latest"],
+                capture_output=True,
+                timeout=5,
+            )
+            if result.returncode != 0:
+                # Default image doesn't exist, skip Docker tests
+                pytest.skip("Docker image not found. Set DOCKER_IMAGE environment variable to test Docker image.")
+        except Exception:
+            pytest.skip("Failed to check Docker image availability")
+        
+        docker_image = "zpf-backstage-tv:latest"
+    
+    return docker_image
 
 
 @pytest.fixture
