@@ -121,6 +121,7 @@ def docker_app_container(tmp_path: Path, docker_image: str, virgin=False):
         for f in files:
             os.chmod(os.path.join(root, f), 0o644)
 
+    process = None
     try:
         # Run Docker container
         # Mount the test instance data at /instance (the default location in the container)
@@ -132,17 +133,28 @@ def docker_app_container(tmp_path: Path, docker_image: str, virgin=False):
             container_name,
             "-p",
             "5001:8080",
+            "-e",
+            "HOST=0.0.0.0",
             "-v",
             f"{instance_data_dir}:/instance",
             docker_image,
         ]
 
-        # Start container
+        # Start container - use a separate thread to handle subprocess
         process = subprocess.Popen(
             docker_run_cmd,
             stdout=subprocess.PIPE,
             stderr=subprocess.PIPE,
+            text=True,
         )
+        
+        # Give the container a moment to start
+        time.sleep(2)
+        
+        # Check if process failed immediately
+        if process.poll() is not None:
+            stdout, stderr = process.communicate()
+            raise RuntimeError(f"Docker container failed to start.\nStdout: {stdout}\nStderr: {stderr}")
         
         # Wait for container to be ready
         max_retries = 60
@@ -156,21 +168,27 @@ def docker_app_container(tmp_path: Path, docker_image: str, virgin=False):
                     # Get container logs for debugging
                     try:
                         logs_cmd = ["docker", "logs", container_name]
-                        logs_result = subprocess.run(logs_cmd, capture_output=True, text=True)
+                        logs_result = subprocess.run(logs_cmd, capture_output=True, text=True, timeout=5)
                         print("Docker logs:", logs_result.stdout)
                         print("Docker errors:", logs_result.stderr)
-                    except Exception:
-                        pass
-                    raise
+                    except Exception as e:
+                        print(f"Failed to get Docker logs: {e}")
+                    raise RuntimeError(f"Failed to connect to app after {max_retries} retries")
                 time.sleep(1)
         
         yield
     finally:
         # Clean up
-        try:
-            subprocess.run(["docker", "stop", container_name], timeout=5)
-        except Exception:
-            pass
+        if process is not None:
+            try:
+                subprocess.run(["docker", "stop", container_name], timeout=5)
+            except Exception:
+                pass
+            try:
+                process.terminate()
+                process.wait(timeout=5)
+            except Exception:
+                pass
 
 
 @pytest.fixture
