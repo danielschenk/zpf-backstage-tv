@@ -145,7 +145,7 @@ def _start_app_docker(tmp_path: Path, docker_image: str, virgin=False):
     finally:
         if process is not None:
             try:
-                subprocess.check_call(["docker", "stop", container_name], timeout=5)
+                subprocess.check_call(["docker", "stop", container_name], timeout=30)
             except subprocess.CalledProcessError:
                 pytest.warning("Failed to stop Docker container")
             process.terminate()
