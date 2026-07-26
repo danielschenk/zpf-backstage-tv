@@ -1,3 +1,4 @@
 USERNAME = "test"
 PASSWORD = "test"
 UPDATE_PROGRAMME = False
+ZPF_API_URL = ""
