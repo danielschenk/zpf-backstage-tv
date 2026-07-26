@@ -126,8 +126,15 @@ jobs:
 
   docker-smoke-test:
     name: "Docker Smoke Test"
-    runs-on: ubuntu-latest
+    runs-on: ${{ matrix.runner }}
     needs: docker
+    strategy:
+      matrix:
+        include:
+          - runner: ubuntu-latest
+            arch: amd64
+          - runner: ubicloud-standard-2-arm
+            arch: arm64
 
     permissions:
       contents: read
@@ -162,12 +169,12 @@ jobs:
 
     - name: Pull Docker image
       run: |
-        docker pull ${{ env.IMAGENAME }}:sha-${{ github.sha }}
+        docker pull --platform linux/${{ matrix.arch }} ${{ env.IMAGENAME }}:sha-${{ github.sha }}
 
     - name: Run smoke tests on Docker image
       env:
         DOCKER_IMAGE: ${{ env.IMAGENAME }}:sha-${{ github.sha }}
-      run: python3 -m pytest test/test_smoke.py -v --docker-app --junitxml=docker-test-report.xml
+      run: python3 -m pytest test/test_smoke.py -v --docker-app --junitxml=docker-test-report-${{ matrix.arch }}.xml
 
     - name: Upload Test Results
       if: always()
@@ -175,4 +182,4 @@ jobs:
       with:
         name: Test Results
         path: |
-          docker-test-report.xml
+          docker-test-report-${{ matrix.arch }}.xml
