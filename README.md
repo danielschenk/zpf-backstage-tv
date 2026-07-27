@@ -1,6 +1,4 @@
-# AmigoText backend
-[![Build](https://github.com/danielschenk/zpf-backstage-tv/actions/workflows/build.yml/badge.svg)](https://github.com/danielschenk/zpf-backstage-tv/actions/workflows/build.yml)
-[![CodeQL](https://github.com/danielschenk/zpf-backstage-tv/actions/workflows/codeql-analysis.yml/badge.svg)](https://github.com/danielschenk/zpf-backstage-tv/actions/workflows/codeql-analysis.yml)
+# AmigoText backend [![Build](https://github.com/danielschenk/zpf-backstage-tv/actions/workflows/ci.yml/badge.svg)](https://github.com/danielschenk/zpf-backstage-tv/actions/workflows/ci.yml)
 
 This repository contains the code for a web backend which provides information to a
 little infotainment system in the backstage area of a yearly music festival, where I
