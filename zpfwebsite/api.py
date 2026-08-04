@@ -23,9 +23,15 @@ class Api:
 
         if location_name is not None:
             location_id = self.get_location_id(location_name)
-            programs = [
-                p for p in programs if "location" in p and p["location"]["id"] == location_id
-            ]
+            filtered_programs = []
+            for program in programs:
+                if "location" not in program:
+                    continue
+                if program["location"] is None or "id" not in program["location"]:
+                    continue
+                if program["location"]["id"] == location_id:
+                    filtered_programs.append(program)
+            return filtered_programs
         return programs
 
     def get_locations(self, force=False) -> list[dict[str, Any]]:

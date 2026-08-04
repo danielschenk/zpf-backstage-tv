@@ -11,6 +11,8 @@ def programs():
     return [
         {"title": "awesome band", "location": {"id": 1}},
         {"title": "boring band", "location": {"id": 2}},
+        {"title": "nowhere band", "location": None},
+        {"title": "band in limbo", "location": {}},
     ]
 
 
