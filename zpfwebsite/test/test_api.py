@@ -1,6 +1,6 @@
 import pytest
 import responses
-from ..api import Api
+from ..api import Api, find_best_matching_program
 
 
 BASE_URL = "https://www.foo.fake"
@@ -53,3 +53,28 @@ def test_get_programs_by_location_case_insensitive(api, programs):
 def test_invalid_location(api):
     with pytest.raises(ValueError):
         api.get_programs("Nonexistent")
+
+
+def test_find_best_matching_program():
+    programs = [
+        {"title": "awesome band", "description": "a"},
+        {"title": "boring band", "description": "b"},
+    ]
+    assert find_best_matching_program(programs, "awesome band") is programs[0]
+    assert find_best_matching_program(programs, "awsome band") is programs[0]
+
+
+def test_find_best_matching_program_no_match():
+    programs = [
+        {"title": "awesome band", "description": "a"},
+        {"title": "boring band", "description": "b"},
+    ]
+    with pytest.raises(ValueError):
+        find_best_matching_program(programs, "completely different")
+
+
+def test_find_best_matching_program_diacritics():
+    programs = [{"title": "Zoë", "description": "a"}]
+    with pytest.raises(ValueError):
+        find_best_matching_program(programs, "Zoe")
+    assert find_best_matching_program(programs, "Zoe", remove_diacritics=True) is programs[0]
