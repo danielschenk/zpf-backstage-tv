@@ -11,6 +11,7 @@ from ..productionplanner import remove_friends_night_tag
         ("Act [VRIENDEN AVOND]", "Act"),
         ("Act@vrienden", "Act"),
         ("Act (vrienden en vriendinnen)", "Act (vrienden en vriendinnen)"),
+        ("Act (VR)", "Act"),
     ],
 )
 def test_remove_friends_night_tag(input, output):
