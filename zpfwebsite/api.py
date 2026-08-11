@@ -1,6 +1,31 @@
 import requests
 import logging
+from difflib import SequenceMatcher
 from typing import Any
+
+from unidecode import unidecode
+
+
+def find_best_matching_program(
+    programs: list[dict[str, Any]], title: str, remove_diacritics: bool = False
+) -> dict[str, Any]:
+    """Find the program whose title best matches `title`.
+
+    Returns the best matching program if its similarity score is 0.8 or higher, otherwise
+    raises `ValueError`. When `remove_diacritics` is True, diacritics are removed from both
+    the search title and program titles before comparison.
+    """
+
+    def ratio(program: dict[str, Any]) -> float:
+        a, b = title, program["title"]
+        if remove_diacritics:
+            a, b = unidecode(a), unidecode(b)
+        return SequenceMatcher(None, a.lower(), b.lower()).ratio()
+
+    best = max(programs, key=ratio)
+    if ratio(best) < 0.8:
+        raise ValueError(f"could not match '{title}' to any program")
+    return best
 
 
 class Api:

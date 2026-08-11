@@ -12,7 +12,6 @@ from dataclasses import dataclass
 import uuid
 from urllib.parse import urlparse
 import logging
-from difflib import SequenceMatcher
 import flask
 from flask import Flask, render_template, jsonify, make_response, request, Response
 from flask_login import LoginManager, login_user, login_required
@@ -79,7 +78,7 @@ def create_app(
     app.config.from_pyfile(config_filename, silent=True)
 
     logging.basicConfig(format="%(asctime)s - %(name)10s - %(levelname)7s - %(message)s")
-    logging.getLogger().setLevel(app.config.get("LOG_LEVEL", "WARN"))
+    logging.getLogger().setLevel(app.config.get("LOG_LEVEL", "INFO"))
     logger = logging.getLogger("app")
 
     dsn = app.config["SENTRY_DSN"]
@@ -180,14 +179,17 @@ def create_app(
                 continue
 
             name = remove_friends_night_tag(act["name"])
-            for website_act in website_acts:
-                website_act["ratio"] = SequenceMatcher(
-                    None, name.lower(), website_act["title"].lower()
-                ).ratio()
-            best = max(website_acts, key=lambda x: x["ratio"])
-            if best["ratio"] < 0.8:
-                logger.error(f"could not match '{name}' to any of website's acts")
-                continue
+            try:
+                best = zpfwebsite.find_best_matching_program(website_acts, name)
+            except ValueError:
+                try:
+                    best = zpfwebsite.find_best_matching_program(
+                        website_acts, name, remove_diacritics=True
+                    )
+                    logger.info(f"matched '{name}' with diacritics removed")
+                except ValueError:
+                    logger.error(f"could not match '{name}' to any of website's acts")
+                    continue
 
             descriptions[key] = best["description"]
 
