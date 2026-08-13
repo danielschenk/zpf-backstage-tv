@@ -294,7 +294,10 @@ def create_app(
                 for event in timeline:
                     if event["type"] == "Showtime":
                         event_stage = event["stage"]
-                        show = {"stage": event_stage.upper() if event_stage is not None else None}
+                        show_stage = event_stage.upper() if event_stage is not None else None
+                        if stage is not None and show_stage != stage:
+                            continue
+                        show = {"stage": show_stage}
                         times = act_event_to_legacy_times(event)
                         show["start"] = times[0]
                         show["end"] = times[1]
@@ -306,7 +309,7 @@ def create_app(
 
                         shows.append(show)
 
-                if stage is None or any(show["stage"] == stage for show in shows):
+                if stage is None or shows:
                     legacy_acts[key] = legacy_act
 
         return legacy_programme
@@ -450,7 +453,7 @@ def create_ical_event(key, act, show, itinerary, hostname):
     event.add("UID", f"{event_uid}@{hostname}")
     event.add("SUMMARY", act["name"])
     event.add("DESCRIPTION", f"{act['description']}")
-    dressing_room = itinerary[key].get("dressing_room", None)
+    dressing_room = itinerary.get(key, {}).get("dressing_room", None)
     if dressing_room is not None and dressing_room != "None":
         location = f"Dressing room {dressing_room} ({show['stage']})"
     else:
