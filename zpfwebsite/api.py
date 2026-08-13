@@ -55,9 +55,31 @@ class Api:
                 if program["location"] is None or "id" not in program["location"]:
                     continue
                 if program["location"]["id"] == location_id:
-                    filtered_programs.append(program)
+                    filtered_programs.append(self._filter_program_timeline_by_location(program, location_id))
             return filtered_programs
         return programs
+
+    @staticmethod
+    def _filter_program_timeline_by_location(
+        program: dict[str, Any], location_id: int
+    ) -> dict[str, Any]:
+        timeline = program.get("timeline")
+        if not isinstance(timeline, list):
+            return program
+
+        filtered_timeline = []
+        for event in timeline:
+            if not isinstance(event, dict):
+                continue
+            event_location = event.get("location")
+            if not isinstance(event_location, dict):
+                continue
+            if event_location.get("id") == location_id:
+                filtered_timeline.append(event)
+
+        filtered_program = program.copy()
+        filtered_program["timeline"] = filtered_timeline
+        return filtered_program
 
     def get_locations(self, force=False) -> list[dict[str, Any]]:
         """Get locations (stages)
