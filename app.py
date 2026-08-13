@@ -453,7 +453,7 @@ def create_ical_event(key, act, show, itinerary, hostname):
     event.add("UID", f"{event_uid}@{hostname}")
     event.add("SUMMARY", act["name"])
     event.add("DESCRIPTION", f"{act['description']}")
-    dressing_room = itinerary[key].get("dressing_room", None)
+    dressing_room = itinerary.get(key, {}).get("dressing_room", None)
     if dressing_room is not None and dressing_room != "None":
         location = f"Dressing room {dressing_room} ({show['stage']})"
     else:
