@@ -268,7 +268,7 @@ def create_app(
 
         This is the format which is still used by the data entry frontend and the AmigoText itself.
         """
-        fallback = "Sorry, we konden de beschrijving niet ophalen. :-(\n Laat je verrassen!"
+        fallback = ""
         with acts_storage.lock() as acts, programme_storage.lock() as programme:
             legacy_programme: dict[str, dict[str, Any]] = {}
             legacy_programme["acts"] = legacy_acts = {}
