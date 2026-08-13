@@ -294,7 +294,10 @@ def create_app(
                 for event in timeline:
                     if event["type"] == "Showtime":
                         event_stage = event["stage"]
-                        show = {"stage": event_stage.upper() if event_stage is not None else None}
+                        show_stage = event_stage.upper() if event_stage is not None else None
+                        if stage is not None and show_stage != stage:
+                            continue
+                        show = {"stage": show_stage}
                         times = act_event_to_legacy_times(event)
                         show["start"] = times[0]
                         show["end"] = times[1]
@@ -306,7 +309,7 @@ def create_app(
 
                         shows.append(show)
 
-                if stage is None or any(show["stage"] == stage for show in shows):
+                if stage is None or shows:
                     legacy_acts[key] = legacy_act
 
         return legacy_programme

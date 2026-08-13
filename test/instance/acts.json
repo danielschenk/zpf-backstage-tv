@@ -76,5 +76,23 @@
         "stage": "Main"
       }
     ]
+  },
+  {
+    "id": "mix",
+    "name": "Mix",
+    "timeline": [
+      {
+        "start": "2025-08-10 18:15:00",
+        "end": "2025-08-10 19:15:00",
+        "type": "Showtime",
+        "stage": "Main"
+      },
+      {
+        "start": "2025-08-10 20:15:00",
+        "end": "2025-08-10 21:15:00",
+        "type": "Showtime",
+        "stage": "Amigo"
+      }
+    ]
   }
 ]

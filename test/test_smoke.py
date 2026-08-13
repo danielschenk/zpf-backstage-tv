@@ -10,6 +10,9 @@ def test_programme(session):
     assert acts["foo"]["description"] == "Description of Foo"
     assert acts["bar"]["name"] == "Bar"
     assert acts["bar"]["description"] == "Description of Bar"
+    assert acts["mix"]["name"] == "Mix"
+    assert len(acts["mix"]["shows"]) == 1
+    assert acts["mix"]["shows"][0]["stage"] == "AMIGO"
     assert "baz" not in acts  # different stage
 
 
