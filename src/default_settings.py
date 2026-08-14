@@ -2,5 +2,6 @@ SECRET_KEY = None
 USERNAME = "configure_username_please"
 PASSWORD = "configure_password_please"
 UPDATE_PROGRAMME = True
+ENABLE_DYNAMIC_TEST_ACT = False
 SENTRY_DSN = None
 SENTRY_ENV = "dev"

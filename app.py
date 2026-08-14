@@ -257,6 +257,45 @@ def create_app(
             free_fields=free_fields,
         )
 
+    DYNAMIC_TEST_ACT_KEY = "__test__"
+
+    def dynamic_test_act_enabled() -> bool:
+        return bool(app.config.get("ENABLE_DYNAMIC_TEST_ACT", False))
+
+    def get_dynamic_test_act_times() -> tuple[datetime.datetime, datetime.datetime]:
+        now_local = datetime.datetime.now(tz=datetime.timezone(datetime.timedelta(hours=2)))
+        fake_start_local = now_local + datetime.timedelta(minutes=6)
+        fake_end_local = fake_start_local + datetime.timedelta(minutes=30)
+        return fake_start_local, fake_end_local
+
+    def make_dynamic_test_programme_item() -> tuple[str, dict[str, Any]]:
+        fake_start_local, fake_end_local = get_dynamic_test_act_times()
+        fake_start_utc = fake_start_local.astimezone(datetime.timezone.utc)
+        fake_end_utc = fake_end_local.astimezone(datetime.timezone.utc)
+        return DYNAMIC_TEST_ACT_KEY, {
+            "name": "Test Act (start time based on fetch)",
+            "shows": [
+                {
+                    "stage": "AMIGO",
+                    "start": fake_start_local.strftime("%H:%M"),
+                    "end": fake_end_local.strftime("%H:%M"),
+                    "start_utc": int(fake_start_utc.timestamp()),
+                    "end_utc": int(fake_end_utc.timestamp()),
+                    "day": LEGACY_DAYS[fake_start_local.weekday()],
+                }
+            ],
+            "description_html": "",
+            "description": "",
+        }
+
+    def make_dynamic_test_act_itinerary_item() -> tuple[str, dict[str, str]]:
+        fake_start_local, _ = get_dynamic_test_act_times()
+        return DYNAMIC_TEST_ACT_KEY, {
+            "dressing_room": "MAIN 3",
+            "soundcheck": (fake_start_local - datetime.timedelta(hours=2)).strftime("%H:%M"),
+            "linecheck": (fake_start_local - datetime.timedelta(minutes=30)).strftime("%H:%M"),
+        }
+
     @app.route("/programme")
     def serve_programme():
         programme = make_legacy_programme("AMIGO")
@@ -311,6 +350,10 @@ def create_app(
 
                 if stage is None or shows:
                     legacy_acts[key] = legacy_act
+
+        if dynamic_test_act_enabled():
+            key, test_item = make_dynamic_test_programme_item()
+            legacy_programme["acts"][key] = test_item
 
         return legacy_programme
 
@@ -402,6 +445,10 @@ def create_app(
                         itin_item[LEGACY_ITINERARY_KEYS[eventtype]] = act_datestr_to_legacy_time(
                             event["start"]
                         )
+
+        if dynamic_test_act_enabled():
+            key, test_item = make_dynamic_test_act_itinerary_item()
+            full_itinerary[key] = test_item
 
         return full_itinerary
 
